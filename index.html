@@ -1,0 +1,197 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#075b3b"><title>Praktik Baik Dana Desa - 10 Titik</title>
+<style>
+:root{--g:#075b3b;--g2:#0b7950;--gold:#d6aa36;--bg:#f2f6f3;--line:#d8e3dc}*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px Arial;color:#18352a}header{background:linear-gradient(120deg,#06452e,#08764c);color:white;padding:20px 15px;border-bottom:5px solid var(--gold)}.head,.wrap{max-width:1050px;margin:auto}.small{font-size:11px;letter-spacing:1px;font-weight:bold}h1{font-size:22px;margin:7px 0}header p{margin:0;font-size:12px}.wrap{padding:16px 13px 35px}.note{background:#fff8e5;border:1px solid #ecd99d;padding:12px;border-radius:10px;margin-bottom:14px;line-height:1.5;font-size:13px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}.stat,.panel{background:white;border:1px solid var(--line);border-radius:13px;padding:13px}.stat b{display:block;color:var(--g);font-size:21px}.stat span{font-size:11px;color:#65766d}.layout{display:grid;grid-template-columns:1.35fr .85fr;gap:14px;align-items:start}.panel h2{margin:0 0 13px;color:var(--g);font-size:17px}.section{margin:17px 0 9px;padding:9px;background:#eaf4ee;border-left:4px solid var(--g2);border-radius:6px;font-weight:bold;color:var(--g);font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{display:flex;flex-direction:column;gap:5px}.full{grid-column:1/-1}label{font-size:12px;font-weight:bold;color:#42594e}input,select,textarea{width:100%;padding:10px;border:1px solid #cbd9d0;border-radius:8px;font:14px Arial;background:white;color:#17372a}textarea{min-height:70px;resize:vertical}.actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}button{border:0;border-radius:8px;padding:10px 12px;font-weight:bold;font-size:12px;cursor:pointer}.primary{background:var(--g);color:white}.gold{background:var(--gold);color:#302707}.light{background:#eaf2ed;color:var(--g)}.danger{background:#fae9e7;color:#a32b20}.item{border:1px solid var(--line);border-radius:9px;padding:10px;margin:8px 0;display:flex;gap:8px;align-items:center}.meta{flex:1;min-width:0}.meta strong{display:block;font-size:12px}.meta small{display:block;color:#64756d;font-size:10px;margin-top:4px}.mini{display:flex;gap:4px}.mini button{padding:7px;font-size:10px}.empty,.foot{font-size:12px;color:#65766d;line-height:1.5}.foot{margin-top:12px}.progress{height:7px;background:#e4ece7;border-radius:20px;overflow:hidden;margin:8px 0 13px}.progress div{height:100%;background:var(--gold)}
+.point-progress{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:6px;margin-top:13px}
+.point-slot{height:24px;border:1px solid #bfcfc5;border-radius:5px;background:#fff;cursor:pointer;padding:0;min-width:0}
+.point-slot.filled{background:#0b7950;border-color:#075b3b}
+.point-slot.current{outline:2px solid var(--gold);outline-offset:2px}
+.point-progress-caption{font-size:11px;color:#65766d;margin-top:7px}
+@media(max-width:420px){.point-progress{gap:4px}.point-slot{height:20px}}@media(max-width:760px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.full{grid-column:auto}header h1{font-size:19px}.panel{padding:12px}.stat{padding:9px}} 
+
+.pro-header{position:relative;overflow:hidden;background:linear-gradient(125deg,#063b2b 0%,#08764d 58%,#0b8a5b 100%);color:#fff;padding:23px 16px 21px;border-bottom:5px solid #d9b44b}
+.pro-header:before{content:"";position:absolute;width:330px;height:330px;border:1px solid rgba(255,255,255,.10);border-radius:50%;right:-105px;top:-190px;box-shadow:0 0 0 28px rgba(255,255,255,.035),0 0 0 58px rgba(255,255,255,.025)}
+.pro-head{position:relative;display:flex;align-items:center;gap:18px;min-height:104px}
+.brand-mark{width:96px;height:96px;flex:0 0 96px;border-radius:20px;background:#fff;display:flex;align-items:center;justify-content:center;padding:9px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.kemendes-logo{display:block;width:100%;height:100%;object-fit:contain}
+.brand-copy{flex:1;min-width:0}
+.eyebrow{font-size:10px;font-weight:800;letter-spacing:1.6px;color:#e9d28e;margin-bottom:7px}
+.pro-header h1{font-size:clamp(22px,3vw,32px);line-height:1.12;letter-spacing:.5px;margin:0 0 7px;font-weight:800}
+.pro-header p{font-size:13px;color:#e4f4eb;margin:0}
+.header-seal b{font-size:15px}
+@media(max-width:560px){.pro-header{padding:17px 13px 16px}.pro-head{gap:11px;align-items:flex-start}.brand-mark{width:66px;height:66px;flex-basis:66px;border-radius:14px;padding:6px}.eyebrow{font-size:8px;letter-spacing:.8px}.pro-header h1{font-size:19px}.pro-header p{font-size:11px}}
+.byline{margin-top:8px;font-size:12px;font-weight:700;letter-spacing:1px;color:#f0d58a;text-transform:lowercase}\n@media(max-width:560px){.byline{font-size:11px;margin-top:6px}}\n
+/* ===== Penyempurnaan tampilan: nyaman di HP dan desktop ===== */
+:root{color-scheme:light}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:#f3f7f4;color:#17352b;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}
+header.pro-header{box-shadow:0 5px 20px rgba(8,54,38,.13)}
+.pro-head{max-width:1120px;margin:0 auto}
+main,.container,.wrap{max-width:1120px;margin-left:auto;margin-right:auto}
+button,input,select,textarea{font:inherit}
+button{min-height:42px;border-radius:10px;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+button:active{transform:scale(.98)}
+input,select,textarea{min-height:43px;border:1px solid #cbd9d1;border-radius:10px;padding:9px 11px;background:#fff;color:#17352b;max-width:100%;width:100%}
+textarea{min-height:96px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid rgba(18,132,86,.2);outline-offset:1px;border-color:#168457}
+label{display:block;font-weight:650;color:#254b3b;margin:0 0 6px}
+.card,.panel,.box,.section,.form-card{border-radius:15px}
+.card,.panel,.form-card{box-shadow:0 4px 18px rgba(19,61,43,.06)}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 10px;vertical-align:top}
+img{max-width:100%;height:auto}
+a{overflow-wrap:anywhere}
+@media(max-width:700px){
+  body{font-size:14px}
+  .pro-header{padding:15px 12px 16px}
+  .pro-head{gap:12px;min-height:74px}
+  .brand-mark{width:62px;height:62px;flex:0 0 62px;border-radius:13px}
+  .pro-header h1{font-size:clamp(18px,5vw,23px);line-height:1.15}
+  .pro-header p{font-size:11px;line-height:1.35}
+  .byline{font-size:10px;margin-top:5px}
+  main,.container,.wrap{width:100%;max-width:none;margin:0;padding-left:12px;padding-right:12px}
+  .card,.panel,.box,.section,.form-card{padding:13px!important;margin-bottom:12px;border-radius:13px}
+  h2{font-size:18px;line-height:1.25}
+  h3{font-size:15px}
+  input,select,textarea{font-size:16px;min-height:46px;padding:10px 11px}
+  button{min-height:44px;padding:9px 12px}
+  .actions,.button-row,.btn-row,.toolbar{display:flex;flex-wrap:wrap;gap:8px}
+  .actions button,.button-row button,.btn-row button{flex:1 1 145px}
+  table{display:block;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch}
+  th,td{padding:8px;font-size:12px}
+  .grid,.form-grid,.row-grid{grid-template-columns:1fr!important}
+  .status-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}
+  .status-grid button,.status-grid .point,.status-grid .box{min-width:0;padding:7px 3px!important;font-size:12px}
+}
+@media(max-width:380px){
+  .brand-mark{width:54px;height:54px;flex-basis:54px}
+  .pro-head{gap:9px}
+  .pro-header h1{font-size:17px}
+  .status-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+  .card,.panel,.form-card{padding:11px!important}
+}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script></head>
+<body><header class="pro-header">
+  <div class="head pro-head">
+    <div class="brand-mark">
+      <img class="kemendes-logo" src="https://commons.wikimedia.org/wiki/Special:FilePath/Logo_Kementerian_Desan_dan_Pembangunan_Tertinggal_Republik_Indonesia_(2024).svg" alt="Logo Kementerian Desa dan Pembangunan Daerah Tertinggal" onerror="this.style.display='none'">
+    </div>
+    <div class="brand-copy">
+      <div class="eyebrow">SISTEM PENDATAAN • TPP P3MD KECAMATAN BINAKAL</div>
+      <h1>PRAKTIK BAIK DANA DESA</h1>
+      <p>Kabupaten Bondowoso · Provinsi Jawa Timur</p><div class="byline">by. suket teki</div>
+</div>
+</div>
+</header>
+<div class="wrap"><div class="note"><b>Petunjuk:</b> Isi satu kegiatan/titik, tekan <b>Simpan Titik</b>, lalu lanjut ke titik berikutnya. Data tersimpan di browser/perangkat ini. Data tersimpan di browser/perangkat ini. Jangan hapus data browser sebelum PDF yang diperlukan disimpan.</div>
+<div class="panel" style="margin-bottom:14px"><div class="grid"><div class="field"><label>Pilih Desa</label><select id="village"><option value="A">Desa Baratan</option><option value="B">Desa Bendelan</option><option value="C">Desa Binakal</option><option value="D">Desa Gadingsari</option><option value="E">Desa Jeruksoksok</option><option value="F">Desa Kembangan</option><option value="G">Desa Sumber Tengah</option><option value="H">Desa Sumberwaru</option></select></div><div class="field"><label>Saat ini mengisi titik ke-</label><select id="pointSelect"><option value="1">Titik 1</option><option value="2">Titik 2</option><option value="3">Titik 3</option><option value="4">Titik 4</option><option value="5">Titik 5</option><option value="6">Titik 6</option><option value="7">Titik 7</option><option value="8">Titik 8</option><option value="9">Titik 9</option><option value="10">Titik 10</option></select></div></div></div>
+<div class="stats"><div class="stat"><b id="count">0/10</b><span>Titik tersimpan di desa ini</span></div><div class="stat"><b id="remain">10</b><span>Titik belum diisi di desa ini</span></div><div class="stat"><b id="allCount">0/80</b><span>Total titik seluruh desa</span></div></div>
+<div class="layout"><main class="panel"><h2 id="title">Input Data Titik 1 — Desa A</h2><div class="progress"><div id="bar" style="width:0"></div></div>
+<form id="f">
+<div class="section">A. IDENTITAS KEGIATAN</div><div class="grid">
+<div class="field full"><label>1. Nama kegiatan (sesuai RAB) *</label><input name="nama" required placeholder="Contoh: Pemasangan PJU"></div>
+<div class="field"><label>2. Desa *</label><input name="desa" required value="Baratan" readonly></div><div class="field"><label>3. Kecamatan *</label><input name="kecamatan" required value="Binakal" readonly></div>
+<div class="field"><label>4. Kabupaten *</label><input name="kabupaten" required value="Bondowoso" readonly></div><div class="field"><label>5. Provinsi *</label><input name="provinsi" required value="Jawa Timur" readonly></div><div class="field"><label>6. Dusun</label><input name="dusun"></div>
+<div class="field"><label>6. RT</label><input name="rt"></div><div class="field"><label>7. RW</label><input name="rw"></div>
+<div class="field"><label>8. Sumber dana *</label><select name="sumber" required><option>Dana Desa</option><option>Alokasi Dana Desa</option><option>Bantuan Keuangan</option><option>Lainnya</option></select></div>
+<div class="field"><label>9. Tahun anggaran *</label><input name="tahun" type="number" min="2000" max="2100" required value="2024"></div>
+<div class="field full"><label>10. Jumlah anggaran (Rp) *</label><input name="anggaran" type="number" min="0" required placeholder="Contoh: 100000000"></div></div>
+<div class="section">B. VOLUME DAN WAKTU PELAKSANAAN</div><div class="grid">
+<div class="field full"><label>11. Volume pekerjaan *</label><input name="volume" required placeholder="Contoh: 5 unit / 100 meter / 1 paket"></div>
+<div class="field"><label>12. Tanggal mulai</label><input name="mulai" type="date"></div><div class="field"><label>13. Tanggal selesai</label><input name="selesai" type="date"></div>
+<div class="field full"><label>14. Pelaksana kegiatan</label><input name="pelaksana" readonly></div></div>
+<div class="section">C. PENERIMA MANFAAT</div><div class="grid">
+<div class="field"><label>17. Total jumlah pemanfaat</label><input name="pemanfaat" type="number" min="0"></div><div class="field"><label>Satuan pemanfaat</label><select name="satuan"><option>Orang</option><option>KK</option></select></div>
+<div class="field full"><label>18. Pemanfaat dari keluarga miskin</label><input name="miskin" type="number" min="0"></div></div>
+<div class="section">D. KONDISI DAN PERMASALAHAN</div><div class="grid">
+<div class="field full"><label>21. Kondisi sebelum kegiatan</label><textarea name="sebelum" placeholder="Jelaskan kondisi awal/permasalahan..."></textarea></div>
+<div class="field full"><label>23. Kondisi sesudah kegiatan</label><textarea name="sesudah" placeholder="Jelaskan perubahan setelah kegiatan..."></textarea></div></div>
+<div class="actions"><button class="primary" type="submit">💾 Simpan Titik</button><button class="light" type="button" onclick="newEntry()">＋ Titik Baru</button><button class="gold" type="button" onclick="pdfOne()">PDF Titik Ini</button><button class="light" type="button" onclick="clearForm()">Kosongkan Form</button></div>
+<div class="point-progress" id="pointProgress" aria-label="Status 10 titik tersimpan"></div>
+<div class="point-progress-caption">Status 10 titik: kotak akan berubah warna setelah data titik disimpan.</div>
+</form>
+<div class="foot">* Wajib diisi. Nama kegiatan, volume, dan anggaran mengacu pada RAB. Jumlah pemanfaat dikonfirmasi kepada pemerintah desa.</div></main>
+<aside class="panel"><h2>Daftar 10 Titik</h2><div id="list" class="empty">Belum ada data tersimpan.</div><div class="actions">
+<button class="primary" style="width:100%" onclick="pdfAll()">📄 PDF Gabungan Desa Ini</button><button class="gold" style="width:100%" onclick="shareWA()">🟢 Bagikan Desa Ini via WhatsApp</button><button class="light" style="width:100%" onclick="pdfAllVillages()">📚 PDF Gabungan 8 Desa</button><button class="danger" style="width:100%" onclick="erase()">Hapus Semua Data</button></div>
+<div class="foot">PDF gabungan berisi seluruh titik yang sudah disimpan. Jika fitur berbagi file tidak didukung browser, unduh PDF lalu lampirkan sendiri di WhatsApp.</div></aside></div></div>
+<script>
+const KEY='praktikBaikDanaDesa_4Desa_10Titik_v2';
+let store={villages:{A:{name:'Baratan',points:{}},B:{name:'Bendelan',points:{}},C:{name:'Binakal',points:{}},D:{name:'Gadingsari',points:{}},E:{name:'Jeruksoksok',points:{}},F:{name:'Kembangan',points:{}},G:{name:'Sumber Tengah',points:{}},H:{name:'Sumberwaru',points:{}}}};
+try{
+  const saved=JSON.parse(localStorage.getItem(KEY)||'null');
+  if(saved?.villages){
+    for(const k of ['A','B','C','D','E','F','G','H']){
+      if(saved.villages[k]){
+        store.villages[k]={name:saved.villages[k].name||store.villages[k].name,points:saved.villages[k].points||{}};
+      }
+    }
+  }
+}catch(e){}
+let village='A',cur=1;
+const $=s=>document.querySelector(s),form=$('#f');
+function selectedVillageName(){
+  const s=$('#village');
+  return s.options[s.selectedIndex].text.replace(/^Desa\s+/i,'').trim();
+}
+function points(){return store.villages[village].points}
+function persist(){localStorage.setItem(KEY,JSON.stringify(store));draw()}
+function read(){let x={};new FormData(form).forEach((v,k)=>x[k]=v);return x}
+function fill(d={}){[...form.elements].forEach(el=>{if(el.name)el.value=d[el.name]!==undefined?d[el.name]:''})}
+function defaults(){const name=selectedVillageName();return {desa:name,kecamatan:'Binakal',kabupaten:'Bondowoso',provinsi:'Jawa Timur',sumber:'Dana Desa',tahun:'2024',satuan:'Orang',pelaksana:'TPK Desa '+name}}
+function choose(n){
+  cur=Math.max(1,Math.min(10,n));
+  $('#pointSelect').value=String(cur);
+  const name=selectedVillageName();
+  store.villages[village].name=name;
+  $('#title').textContent='Input Data Titik '+cur+' — Desa '+name+(points()[cur]?' • Tersimpan':'');
+  let d=points()[cur]||defaults();
+  d={...d,desa:name,kecamatan:'Binakal',kabupaten:'Bondowoso',provinsi:'Jawa Timur',pelaksana:'TPK Desa '+name};
+  fill(d);
+  form.elements.desa.value=name;
+  form.elements.kecamatan.value='Binakal';
+  form.elements.kabupaten.value='Bondowoso';
+  form.elements.provinsi.value='Jawa Timur';
+  form.elements.pelaksana.value='TPK Desa '+name;
+  draw();
+}
+function switchVillage(){
+  village=$('#village').value;
+  store.villages[village].name=selectedVillageName();
+  form.reset();
+  choose(Number($('#pointSelect').value)||1);
+}
+$('#village').addEventListener('change',switchVillage);
+$('#pointSelect').addEventListener('change',e=>choose(Number(e.target.value)));
+function saveVillageName(){let name=$('#villageName').value.trim();if(!name){alert('Nama desa tidak boleh kosong.');return}store.villages[village].name=name;for(let n=1;n<=10;n++){if(points()[n]&&!points()[n].desa)points()[n].desa=name;}persist();choose(cur);alert('Nama desa berhasil disimpan.')}
+function newEntry(){let n=1;while(n<=10&&points()[n])n++;if(n>10){alert('Sepuluh titik untuk '+store.villages[village].name+' sudah terisi. Pilih titik untuk mengedit.');return}form.reset();choose(n)}
+form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.')});
+function clearForm(){if(confirm('Kosongkan form? Data tersimpan tidak dihapus.')){form.reset();fill(defaults());form.elements.desa.value=store.villages[village].name;form.elements.kecamatan.value='Binakal';form.elements.kabupaten.value='Bondowoso';form.elements.provinsi.value='Jawa Timur';form.elements.pelaksana.value='TPK Desa '+store.villages[village].name}}
+function drawPointProgress(){
+  const el=$('#pointProgress');
+  if(!el)return;
+  el.innerHTML=Array.from({length:10},(_,i)=>{
+    const n=i+1,filled=!!points()[n],current=cur===n;
+    return `<button type="button" class="point-slot${filled?' filled':''}${current?' current':''}" title="Titik ${n}${filled?' — tersimpan':' — belum tersimpan'}" aria-label="Titik ${n}${filled?' tersimpan':' belum tersimpan'}" onclick="choose(${n})"></button>`;
+  }).join('');
+}
+function draw(){let p=points(),ns=Object.keys(p).map(Number).sort((a,b)=>a-b),total=Object.values(store.villages).reduce((s,v)=>s+Object.keys(v.points).length,0);$('#count').textContent=ns.length+'/10';$('#remain').textContent=10-ns.length;$('#allCount').textContent=total+'/80';$('#list').innerHTML=ns.length?ns.map(n=>`<div class="item"><div class="meta"><strong>Titik ${n} — ${esc(p[n].nama)}</strong><small>${esc(selectedVillageName())} • TA ${esc(p[n].tahun)} • ${esc(p[n].dusun||'Dusun belum diisi')}</small></div><div class="mini"><button class="light" onclick="choose(${n})">Edit</button><button class="gold" onclick="pdfOne(${n})">PDF</button><button class="danger" onclick="del(${n})">×</button></div></div>`).join(''):'Belum ada data tersimpan untuk desa ini.';drawPointProgress()}
+function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function del(n){if(confirm('Hapus data titik '+n+' di '+store.villages[village].name+'?')){delete points()[n];persist();if(cur===n){form.reset();choose(n)}}}
+function lib(){if(!window.jspdf?.jsPDF){alert('Pustaka PDF belum termuat. Periksa koneksi internet lalu muat ulang. Data tetap tersimpan di perangkat.');return null}return window.jspdf.jsPDF}
+function rupiah(x){return 'Rp '+Number(x||0).toLocaleString('id-ID')}
+function addPage(pdf,n,d,first,vName){if(!first)pdf.addPage();pdf.setTextColor(20);pdf.setFont('helvetica','bold');pdf.setFontSize(12);pdf.text('TPP P3MD KECAMATAN BINAKAL',105,14,{align:'center'});pdf.setFontSize(9);pdf.text('KABUPATEN BONDOWOSO',105,20,{align:'center'});pdf.setDrawColor(7,91,59);pdf.line(15,24,195,24);pdf.setFontSize(13);pdf.text('FORMULIR PRAKTIK BAIK KEGIATAN DANA DESA',105,33,{align:'center'});pdf.setFontSize(10);pdf.text(vName+' — TITIK KEGIATAN '+n,105,40,{align:'center'});
+let rows=[['1. Nama kegiatan',d.nama],['2. Desa',d.desa],['3. Kecamatan',d.kecamatan],['4. Kabupaten',d.kabupaten],['5. Provinsi',d.provinsi||'Jawa Timur'],['6. Dusun',d.dusun],['6. RT',d.rt],['7. RW',d.rw],['8. Sumber dana',d.sumber],['9. Tahun anggaran',d.tahun],['10. Jumlah anggaran',rupiah(d.anggaran)],['11. Volume pekerjaan',d.volume],['12. Tanggal mulai',d.mulai],['13. Tanggal selesai',d.selesai],['14. Pelaksana kegiatan',d.pelaksana],['17. Total jumlah pemanfaat',(d.pemanfaat||'')+' '+(d.satuan||'')],['18. Pemanfaat keluarga miskin',d.miskin],['21. Kondisi sebelum kegiatan',d.sebelum],['23. Kondisi sesudah kegiatan',d.sesudah]];
+pdf.autoTable({startY:47,head:[['DATA YANG DIKUMPULKAN','ISIAN / KETERANGAN']],body:rows,theme:'grid',styles:{font:'helvetica',fontSize:9,cellPadding:3,overflow:'linebreak',valign:'top'},headStyles:{fillColor:[7,91,59],textColor:255},columnStyles:{0:{cellWidth:67,fontStyle:'bold'},1:{cellWidth:113}},margin:{left:15,right:15,bottom:15}});
+pdf.setFontSize(8);pdf.setTextColor(90);pdf.text('Formulir Praktik Baik Dana Desa | '+vName+' | TPP P3MD Kecamatan Binakal',105,289,{align:'center'})}
+function makeFor(entries){let PDF=lib();if(!PDF)return null;if(!entries.length){alert('Belum ada data tersimpan.');return null}let p=new PDF({orientation:'portrait',unit:'mm',format:'a4'});entries.forEach((it,i)=>addPage(p,it.n,it.d,i===0,it.vName));return p}
+function entriesCurrent(){const name=selectedVillageName();return Object.keys(points()).map(Number).sort((a,b)=>a-b).map(n=>({n,d:{...points()[n],desa:name,pelaksana:'TPK Desa '+name},vName:name}))}
+function entriesAll(){let a=[];for(let k of ['A','B','C','D','E','F','G','H']){let v=store.villages[k];Object.keys(v.points).map(Number).sort((x,y)=>x-y).forEach(n=>a.push({n,d:v.points[n],vName:v.name}))}return a}
+function pdfOne(n=cur){let d=points()[n]||(n===cur?read():null);if(!d?.nama){alert('Simpan data titik terlebih dahulu.');return}let PDF=lib();if(!PDF)return;let p=new PDF({unit:'mm',format:'a4'});addPage(p,n,d,true,store.villages[village].name);p.save('Praktik_Baik_'+village+'_Titik_'+n+'.pdf')}
+function pdfAll(){let a=entriesCurrent(),p=makeFor(a);if(p)p.save('Praktik_Baik_'+village+'_ '+a.length+'_Titik.pdf')}
+function pdfAllVillages(){let a=entriesAll(),p=makeFor(a);if(p)p.save('Praktik_Baik_8_Desa_'+a.length+'_Titik.pdf')}
+async function shareWA(){let a=entriesCurrent(),p=makeFor(a);if(!p)return;let blob=p.output('blob'),file=new File([blob],'Praktik_Baik_'+village+'_Dana_Desa.pdf',{type:'application/pdf'}),msg='Laporan Praktik Baik Kegiatan Dana Desa — '+store.villages[village].name+' ('+a.length+' titik).';if(navigator.canShare?.({files:[file]})){try{await navigator.share({files:[file],title:'Praktik Baik Dana Desa',text:msg})}catch(e){if(e.name!=='AbortError')alert('Berbagi tidak berhasil. Unduh PDF lalu lampirkan di WhatsApp.')}}else{p.save('Praktik_Baik_'+village+'_Dana_Desa.pdf');window.open('https://wa.me/?text='+encodeURIComponent(msg+' PDF sudah diunduh, silakan lampirkan.'),'_blank');alert('PDF diunduh. Lampirkan file PDF tersebut pada WhatsApp.')}}
+function erase(){if(confirm('Hapus seluruh data dari keempat desa? Buat backup dahulu jika masih diperlukan.')){store={villages:{A:{name:'Baratan',points:{}},B:{name:'Bendelan',points:{}},C:{name:'Binakal',points:{}},D:{name:'Gadingsari',points:{}},E:{name:'Jeruksoksok',points:{}},F:{name:'Kembangan',points:{}},G:{name:'Sumber Tengah',points:{}},H:{name:'Sumberwaru',points:{}}}};persist();form.reset();choose(1)}}
+choose(1);
+</script></body></html>
