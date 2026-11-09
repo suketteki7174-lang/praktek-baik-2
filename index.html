@@ -331,11 +331,10 @@ a{overflow-wrap:anywhere}
 </div>
 <div class="section">H. SINKRONISASI DATA ONLINE</div>
 <div class="field full">
-  <label>Konfigurasi Firebase (JSON)</label>
-  <textarea id="firebaseConfig" rows="4" placeholder='Tempel konfigurasi Firebase dari Project settings > Your apps'></textarea>
-  <small class="empty">Opsional. Tanpa konfigurasi Firebase, aplikasi tetap menyimpan data dan media secara offline di perangkat ini.</small>
+  <label>Koneksi Supabase</label>
+  <div class="empty">Terhubung ke Supabase. Data tetap disimpan lokal saat offline, lalu dapat dikirim ke server saat internet tersedia.</div>
   <div class="actions">
-    <button type="button" class="light" onclick="simpanKonfigurasiFirebase()">Simpan Konfigurasi</button>
+    <button type="button" class="light" onclick="ujiKoneksiSupabase()">Uji Koneksi Server</button>
     <button type="button" class="primary" onclick="sinkronkanTitikAktif()">☁️ Sinkronkan Titik Ini</button>
     <button type="button" class="gold" onclick="sinkronkanSemua()">☁️ Sinkronkan Semua Data</button>
   </div>
@@ -572,7 +571,7 @@ function editRecap(key,n){
 choose(1);
 
 
-// --- Praktik Baik: narasi, media offline (IndexedDB), dan sinkronisasi Firebase ---
+// --- Praktik Baik: narasi, media offline (IndexedDB), dan sinkronisasi Supabase ---
 const PB_MEDIA_DB='PBDB_Binakal_v1', PB_MEDIA_STORE='media';
 let pbMedia={foto:[],video:[]};
 
@@ -700,52 +699,56 @@ function buatNarasiOtomatis(){
   ].join('\n\n');
   document.getElementById('narasiPraktik').value=narasi;
 }
-function simpanKonfigurasiFirebase(){
-  const raw=document.getElementById('firebaseConfig').value.trim();
-  if(!raw){alert('Tempel konfigurasi Firebase terlebih dahulu.');return}
-  try{const cfg=JSON.parse(raw);if(!cfg.apiKey||!cfg.projectId||!cfg.storageBucket||!cfg.appId)throw new Error('apiKey, projectId, storageBucket, dan appId wajib ada.');localStorage.setItem('PB_FIREBASE_CONFIG',JSON.stringify(cfg));pbStatus('Konfigurasi Firebase tersimpan. Siap sinkron jika internet tersedia.');alert('Konfigurasi tersimpan di perangkat ini.')}
-  catch(e){alert('JSON Firebase tidak valid: '+e.message)}
+// ===== SUPABASE: sinkronisasi data + foto/video =====
+// Publishable key memang boleh digunakan di browser. Keamanan tetap diatur melalui RLS.
+const PB_SUPABASE_URL='https://afzbcqnbgxtpffrqorfy.supabase.co';
+const PB_SUPABASE_KEY='sb_publishable_bLIv3hwfommmCUo3PIacQw_4_M1Z2zq';
+const PB_SUPABASE_BUCKET='dokumentasi';
+const PB_SUPABASE_TABLE='kegiatan';
+async function pbSupabaseReady(){
+  if(window.pbSupabase)return window.pbSupabase;
+  const mod=await import('https://esm.sh/@supabase/supabase-js@2');
+  const client=mod.createClient(PB_SUPABASE_URL,PB_SUPABASE_KEY);
+  window.pbSupabase=client;return client;
 }
-(function loadFirebaseConfig(){try{const c=localStorage.getItem('PB_FIREBASE_CONFIG');if(c&&document.getElementById('firebaseConfig'))document.getElementById('firebaseConfig').value=c}catch(e){}})();
-
-async function pbFirebaseReady(){
-  if(window.pbFirebase)return window.pbFirebase;
-  const raw=localStorage.getItem('PB_FIREBASE_CONFIG');if(!raw)throw new Error('Konfigurasi Firebase belum diisi.');
-  const cfg=JSON.parse(raw);
-  const [appMod,dbMod,storageMod]=await Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),
-    import('https://www.gstatic.com/firebasejs/10.14.1/firebase-storage.js')
-  ]);
-  const app=appMod.initializeApp(cfg,'praktikBaikBinakal');
-  window.pbFirebase={app,db:dbMod.getFirestore(app),storage:storageMod.getStorage(app),dbMod,storageMod};
-  return window.pbFirebase;
+async function ujiKoneksiSupabase(){
+  try{
+    pbStatus('Menguji koneksi Supabase...');
+    const sb=await pbSupabaseReady();
+    const {error}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,titik').limit(1);
+    if(error)throw error;
+    pbStatus('Koneksi Supabase berhasil.');alert('Koneksi Supabase berhasil.');
+  }catch(e){pbStatus('Koneksi gagal: '+e.message);alert('Koneksi Supabase gagal: '+e.message+'\nPeriksa tabel, kolom, dan kebijakan RLS.')}
+}
+async function pbLocalMediaFor(key,n){
+  const db=await pbDb();
+  return await new Promise((resolve,reject)=>{
+    const req=db.transaction(PB_MEDIA_STORE,'readonly').objectStore(PB_MEDIA_STORE).getAll();
+    req.onsuccess=()=>resolve((req.result||[]).filter(x=>x.group===`${key}_${n}_foto`||x.group===`${key}_${n}_video`));
+    req.onerror=()=>reject(req.error);
+  });
 }
 async function pbSyncOne(key,n){
-  const fb=await pbFirebaseReady(),v=store.villages[key],d=v.points[n];if(!d)throw new Error(`Data titik ${n} belum disimpan.`);
-  const {doc,setDoc,serverTimestamp}=fb.dbMod;
+  const sb=await pbSupabaseReady(),v=store.villages[key],d=v?.points?.[n];
+  if(!d)throw new Error(`Data titik ${n} belum disimpan.`);
   const media=[];
-  for(const type of ['foto','video']){
-    const group=`${key}_${n}_${type}`,db=await pbDb();
-    const files=await new Promise((resolve,reject)=>{
-      const req=db.transaction(PB_MEDIA_STORE,'readonly').objectStore(PB_MEDIA_STORE).getAll();
-      req.onsuccess=()=>resolve(req.result.filter(x=>x.group===group));req.onerror=()=>reject(req.error);
-    });
-    for(const file of files){
-      const path=`praktik-baik/${key}/titik-${n}/${type}/${file.id}_${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;
-      const ref=fb.storageMod.ref(fb.storage,path);
-      await fb.storageMod.uploadBytes(ref,file.blob,{contentType:file.mime});
-      const url=await fb.storageMod.getDownloadURL(ref);
-      media.push({type,name:file.name,path,url,size:file.size});
-    }
+  const files=await pbLocalMediaFor(key,n);
+  for(const file of files){
+    if(!file.blob)continue;
+    const safeName=String(file.name||'media').replace(/[^a-zA-Z0-9._-]/g,'_');
+    const path=`${key}/titik-${n}/${file.type}/${file.id}_${safeName}`;
+    const {error:upErr}=await sb.storage.from(PB_SUPABASE_BUCKET).upload(path,file.blob,{contentType:file.mime||file.blob.type||'application/octet-stream',upsert:true});
+    if(upErr)throw new Error(`Gagal upload ${file.name}: ${upErr.message}`);
+    const {data:urlData}=sb.storage.from(PB_SUPABASE_BUCKET).getPublicUrl(path);
+    media.push({type:file.type,name:file.name,path,url:urlData.publicUrl,size:file.size||file.blob.size});
   }
-  await setDoc(doc(fb.db,'praktikBaikDanaDesa',`${key}_titik_${n}`),{
-    desa:v.name,kodeDesa:key,titik:n,data:d,media,updatedAt:serverTimestamp()
-  },{merge:true});
+  const row={kode_desa:key,desa:v.name,titik:Number(n),data:d,media,updated_at:new Date().toISOString()};
+  const {error}=await sb.from(PB_SUPABASE_TABLE).upsert(row,{onConflict:'kode_desa,titik'});
+  if(error)throw error;
   return media.length;
 }
 async function sinkronkanTitikAktif(){
-  try{pbStatus('Menghubungkan ke Firebase...');const count=await pbSyncOne(village,cur);pbStatus(`Titik ${cur} berhasil disinkronkan beserta ${count} file media.`);alert('Sinkronisasi titik berhasil.')}
+  try{pbStatus('Menghubungkan ke Supabase...');const count=await pbSyncOne(village,cur);pbStatus(`Titik ${cur} berhasil disinkronkan beserta ${count} file media.`);alert('Sinkronisasi titik berhasil ke Supabase.')}
   catch(e){pbStatus('Belum tersinkron: '+e.message);alert('Sinkronisasi belum berhasil: '+e.message+'\nData lokal tetap aman di perangkat.')}
 }
 async function sinkronkanSemua(){
@@ -753,10 +756,10 @@ async function sinkronkanSemua(){
     const keys=['A','B','C','D','E','F','G','H'];let done=0,total=Object.values(store.villages).reduce((a,v)=>a+Object.keys(v.points).length,0);
     if(!total){alert('Belum ada data untuk disinkronkan.');return}
     for(const k of keys){for(const n of Object.keys(store.villages[k].points).map(Number).sort((a,b)=>a-b)){pbStatus(`Sinkronisasi ${done+1}/${total}: ${store.villages[k].name}, titik ${n}...`);await pbSyncOne(k,n);done++}}
-    pbStatus(`Selesai. ${done} titik telah disinkronkan ke Firebase.`);alert(`${done} titik berhasil disinkronkan.`)
+    pbStatus(`Selesai. ${done} titik telah disinkronkan ke Supabase.`);alert(`${done} titik berhasil disinkronkan ke Supabase.`)
   }catch(e){pbStatus('Sinkronisasi terhenti: '+e.message);alert('Sinkronisasi terhenti: '+e.message+'\nData lokal tetap aman.')}
 }
-window.addEventListener('online',()=>pbStatus('Internet tersedia. Data lokal aman; tekan Sinkronkan Semua Data untuk mengirim ke Firebase.'));
+window.addEventListener('online',()=>pbStatus('Internet tersedia. Data lokal aman; tekan Sinkronkan Semua Data untuk mengirim ke Supabase.'));
 Promise.resolve().then(()=>pbDrawMedia().catch(e=>console.warn('Media lokal:',e)));
 
 
@@ -809,29 +812,20 @@ async function unduhPaketSemua(){
       const bits=String(item.group||'').split('_');
       addMediaToZip(bits[0]||'Desa',bits[1]||'0',item.type,item.name,item.blob,item.path||'local:'+item.id);
     }
-    // Jika tersedia, ikut ambil dokumentasi yang tersimpan di Firebase (misalnya data dari perangkat lain).
-    if(localStorage.getItem('PB_FIREBASE_CONFIG')){
-      try{
-        const fb=await pbFirebaseReady();
-        const {doc,getDoc}=fb.dbMod;
-        for(const [key,desa] of Object.entries(store.villages||{})){
-          for(const titik of Object.keys(desa.points||{})){
-            try{
-              const snap=await getDoc(doc(fb.db,'praktikBaikDanaDesa',`${key}_titik_${titik}`));
-              if(!snap.exists())continue;
-              for(const m of (snap.data().media||[])){
-                if(m.path&&includedPaths.has(m.path))continue;
-                if(!m.url)continue;
-                const response=await fetch(m.url);
-                if(!response.ok)throw new Error('Gagal mengunduh '+(m.name||'media Firebase'));
-                const blob=await response.blob();
-                addMediaToZip(key,titik,m.type,m.name,blob,m.path||m.url);
-              }
-            }catch(e){cloudSkipped++;console.warn('Media cloud tidak ikut diunduh:',key,titik,e)}
-          }
+    // Sertakan juga dokumentasi cloud dari Supabase jika tersedia.
+    try{
+      const sb=await pbSupabaseReady();
+      const {data:cloudRows,error}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,titik,media');
+      if(error)throw error;
+      for(const row of (cloudRows||[])){
+        for(const m of (row.media||[])){
+          if(!m.url||includedPaths.has(m.path||m.url))continue;
+          try{const response=await fetch(m.url);if(!response.ok)throw new Error('Gagal mengunduh '+(m.name||'media Supabase'));const blob=await response.blob();addMediaToZip(row.kode_desa,row.titik,m.type,m.name,blob,m.path||m.url)}
+          catch(e){cloudSkipped++;console.warn('Media Supabase tidak ikut diunduh:',e)}
         }
-      }catch(e){cloudSkipped++;console.warn('Firebase tidak dapat dibaca saat ekspor:',e)}
-    }
+      }
+    }catch(e){cloudSkipped++;console.warn('Supabase tidak dapat dibaca saat ekspor:',e)}
+
     root.file('PETUNJUK.txt',[
       'CADANGAN PRAKTIK BAIK DANA DESA - KECAMATAN BINAKAL',
       '',
@@ -849,7 +843,7 @@ async function unduhPaketSemua(){
     const url=URL.createObjectURL(blob),a=document.createElement('a');
     a.href=url;a.download='Cadangan_Praktik_Baik_Dana_Desa_Binakal_'+new Date().toISOString().slice(0,10)+'.zip';
     document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-    alert(`Paket unduhan berhasil dibuat.\nData kegiatan: ${rows.length} titik\nFoto/video yang disertakan: ${mediaCount} file${missing?`\nMedia lokal tanpa Blob: ${missing}` : ''}${cloudSkipped?`\nMedia Firebase gagal diambil: ${cloudSkipped}` : ''}`);
+    alert(`Paket unduhan berhasil dibuat.\nData kegiatan: ${rows.length} titik\nFoto/video yang disertakan: ${mediaCount} file${missing?`\nMedia lokal tanpa Blob: ${missing}` : ''}${cloudSkipped?`\nMedia Supabase gagal diambil: ${cloudSkipped}` : ''}`);
   }catch(err){console.error(err);alert('Gagal membuat paket unduhan: '+err.message+'\nData aplikasi tidak dihapus.')}
 }
 
@@ -884,18 +878,14 @@ async function lihatRecap(key,n){
     cloudNote='Penyimpanan lokal tidak dapat dibaca: '+err.message;
   }
 
-  // Jika dokumentasi pernah disinkronkan, ambil juga daftar media dari Firebase.
-  // Ini memungkinkan rekap menampilkan media meskipun dibuka dari perangkat/browser lain.
+  // Ambil juga daftar media cloud dari Supabase agar rekap bisa dibuka di perangkat lain.
   try{
-    if(localStorage.getItem('PB_FIREBASE_CONFIG')){
-      const fb=await pbFirebaseReady();
-      const {doc,getDoc}=fb.dbMod;
-      const snap=await getDoc(doc(fb.db,'praktikBaikDanaDesa',`${key}_titik_${n}`));
-      if(snap.exists()) cloudMedia=snap.data().media||[];
-    }
-  }catch(err){
-    cloudNote=cloudNote?cloudNote+'; Firebase: '+err.message:'Firebase belum dapat dibaca: '+err.message;
-  }
+    const sb=await pbSupabaseReady();
+    const {data,error}=await sb.from(PB_SUPABASE_TABLE).select('media').eq('kode_desa',key).eq('titik',Number(n)).maybeSingle();
+    if(error)throw error;
+    if(data)cloudMedia=data.media||[];
+  }catch(err){cloudNote=cloudNote?cloudNote+'; Supabase: '+err.message:'Supabase belum dapat dibaca: '+err.message;}
+
 
   // Gabungkan media lokal dan cloud tanpa menampilkan file yang sama dua kali.
   const media=[...localMedia];
@@ -921,7 +911,7 @@ async function lihatRecap(key,n){
   }else out+='<p class="empty">Belum ada video yang tersimpan untuk titik ini.</p>';
   out+='</div>';
   if(cloudNote)out+='<p class="empty">Catatan: '+safe(cloudNote)+'</p>';
-  if(!fotos.length&&!videos.length)out+='<p class="empty">Jika foto/video terlihat pada formulir input tetapi tidak muncul di sini, pastikan desa dan nomor titik saat mengunggah sama dengan data yang dibuka. Setelah itu tekan “Sinkronkan Titik Ini” bila ingin dokumentasi tersedia melalui Firebase.</p>';
+  if(!fotos.length&&!videos.length)out+='<p class="empty">Jika foto/video terlihat pada formulir input tetapi tidak muncul di sini, pastikan desa dan nomor titik saat mengunggah sama dengan data yang dibuka. Setelah itu tekan “Sinkronkan Titik Ini” bila ingin dokumentasi tersedia melalui Supabase.</p>';
   body.innerHTML=out;
 }
 function tutupRecap(){document.getElementById('recapDetailModal').style.display='none'}
