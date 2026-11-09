@@ -472,7 +472,7 @@ function saveVillageName(){let name=$('#villageName').value.trim();if(!name){ale
 
 function newEntry(){let n=1;while(n<=10&&points()[n])n++;if(n>10){alert('Sepuluh titik untuk '+store.villages[village].name+' sudah terisi. Pilih titik untuk mengedit.');return}form.reset();choose(n)}
 
-form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.')});
+form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.')});
 
 function clearForm(){if(confirm('Kosongkan form? Data tersimpan tidak dihapus.')){form.reset();fill(defaults());form.elements.desa.value=store.villages[village].name;form.elements.kecamatan.value='Binakal';form.elements.kabupaten.value='Bondowoso';form.elements.provinsi.value='Jawa Timur';form.elements.pelaksana.value='TPK Desa '+store.villages[village].name}}
 
@@ -742,9 +742,11 @@ async function pbSyncOne(key,n){
     const {data:urlData}=sb.storage.from(PB_SUPABASE_BUCKET).getPublicUrl(path);
     media.push({type:file.type,name:file.name,path,url:urlData.publicUrl,size:file.size||file.blob.size});
   }
-  const row={kode_desa:key,desa:v.name,titik:Number(n),data:d,media,updated_at:new Date().toISOString()};
+  const stamp=new Date().toISOString();
+  const row={kode_desa:key,desa:v.name,titik:Number(n),data:d,media,updated_at:stamp};
   const {error}=await sb.from(PB_SUPABASE_TABLE).upsert(row,{onConflict:'kode_desa,titik'});
   if(error)throw error;
+  d._pbCloudUpdatedAt=stamp;persist();
   return media.length;
 }
 async function sinkronkanTitikAktif(){
@@ -759,6 +761,72 @@ async function sinkronkanSemua(){
     pbStatus(`Selesai. ${done} titik telah disinkronkan ke Supabase.`);alert(`${done} titik berhasil disinkronkan ke Supabase.`)
   }catch(e){pbStatus('Sinkronisasi terhenti: '+e.message);alert('Sinkronisasi terhenti: '+e.message+'\nData lokal tetap aman.')}
 }
+// ===== REALTIME: menerima perubahan dari HP/perangkat lain =====
+let pbRealtimeChannel=null;
+async function pbApplyCloudRow(row){
+  if(!row||!['A','B','C','D','E','F','G','H'].includes(String(row.kode_desa)))return false;
+  const key=String(row.kode_desa),n=Number(row.titik),stamp=String(row.updated_at||'');
+  if(!Number.isInteger(n)||n<1||n>10||!row.data)return false;
+  const villageData=store.villages[key];
+  if(!villageData)return false;
+  const local=villageData.points[n];
+  if(local){
+    const cloudKnown=Date.parse(local._pbCloudUpdatedAt||'')||0;
+    const localChanged=Date.parse(local._pbLocalUpdatedAt||'')||0;
+    if(!cloudKnown||localChanged>cloudKnown||Date.parse(stamp)<=cloudKnown)return false;
+  }
+  const incoming={...row.data,_pbCloudUpdatedAt:stamp,_pbLocalUpdatedAt:stamp};
+  villageData.name=row.desa||villageData.name;
+  villageData.points[n]=incoming;
+  if(Array.isArray(row.media)&&row.media.length){
+    const db=await pbDb();
+    for(const item of row.media){
+      if(!item.path||!['foto','video'].includes(item.type))continue;
+      const id=`${key}_${n}_${item.type}_${item.path}`;
+      const exists=await new Promise(resolve=>{
+        const req=db.transaction(PB_MEDIA_STORE,'readonly').objectStore(PB_MEDIA_STORE).get(id);
+        req.onsuccess=()=>resolve(!!req.result);req.onerror=()=>resolve(false);
+      });
+      if(exists)continue;
+      const {data:blob,error}=await (await pbSupabaseReady()).storage.from(PB_SUPABASE_BUCKET).download(item.path);
+      if(error){console.warn('Media realtime gagal diunduh:',error.message);continue;}
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction(PB_MEDIA_STORE,'readwrite');
+        tx.objectStore(PB_MEDIA_STORE).put({id,group:`${key}_${n}_${item.type}`,type:item.type,name:item.name||'Dokumentasi',mime:blob.type,size:blob.size,blob,addedAt:Date.now(),cloudPath:item.path});
+        tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+      });
+    }
+  }
+  localStorage.setItem(KEY,JSON.stringify(store));
+  draw();
+  if($('#recapMenu')&&$('#recapMenu').style.display!=='none')drawRecap();
+  if(key===village&&n===cur)await pbDrawMedia();
+  pbStatus(`Data terbaru diterima: ${row.desa||key}, titik ${n}.`);
+  return true;
+}
+async function pbStartRealtime(){
+  try{
+    const sb=await pbSupabaseReady();
+    if(pbRealtimeChannel)await sb.removeChannel(pbRealtimeChannel);
+    pbRealtimeChannel=sb.channel('praktik-baik-kegiatan-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:PB_SUPABASE_TABLE},async payload=>{
+        try{
+          if(payload.eventType==='DELETE')return;
+          const applied=await pbApplyCloudRow(payload.new);
+          if(!applied)pbStatus('Ada perubahan server, tetapi data lokal yang belum tersinkron dilindungi agar tidak tertimpa.');
+        }catch(e){console.warn('Realtime:',e);pbStatus('Realtime: '+e.message);}
+      })
+      .subscribe(status=>{
+        if(status==='SUBSCRIBED')pbStatus('Realtime aktif. Menunggu perubahan dari perangkat lain.');
+        else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')pbStatus('Realtime belum tersambung. Periksa internet dan pengaturan Supabase.');
+      });
+    const {data,error}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,desa,titik,data,media,updated_at');
+    if(error)throw error;
+    for(const row of (data||[]))await pbApplyCloudRow(row);
+  }catch(e){console.warn('Gagal memulai Realtime:',e);pbStatus('Realtime belum aktif: '+e.message);}
+}
+window.addEventListener('load',()=>setTimeout(pbStartRealtime,1500));
+
 window.addEventListener('online',()=>pbStatus('Internet tersedia. Data lokal aman; tekan Sinkronkan Semua Data untuk mengirim ke Supabase.'));
 Promise.resolve().then(()=>pbDrawMedia().catch(e=>console.warn('Media lokal:',e)));
 
