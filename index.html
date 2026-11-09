@@ -270,7 +270,7 @@ a{overflow-wrap:anywhere}
 
 <div class="field"><label>8. Sumber dana *</label><select name="sumber" required><option value="" selected></option><option>Dana Desa</option><option>Alokasi Dana Desa</option><option>Bantuan Keuangan</option><option>Lainnya</option></select></div>
 
-<div class="field"><label>9. Tahun anggaran *</label><input name="tahun" type="number" min="2000" max="2100" required></div>
+<div class="field"><label>9. Tahun anggaran</label><input name="tahun" type="number" min="2000" max="2100"></div>
 
 <div class="field full"><label>10. Jumlah anggaran (Rp)</label><input name="anggaran" type="number" min="0"></div></div>
 
@@ -293,16 +293,6 @@ a{overflow-wrap:anywhere}
 <div class="field full"><label>21. Kondisi sebelum kegiatan</label><textarea name="sebelum"></textarea></div>
 
 <div class="field full"><label>23. Kondisi sesudah kegiatan</label><textarea name="sesudah"></textarea></div></div>
-
-
-<div class="section">E. NARASI PRAKTIK BAIK</div>
-<div class="field full">
-  <label>Narasi kegiatan (dapat dibuat otomatis lalu diedit)</label>
-  <textarea id="narasiPraktik" name="narasiPraktik" rows="7"></textarea>
-  <div class="actions">
-    <button type="button" class="light" onclick="buatNarasiOtomatis()">✨ Buat Narasi Otomatis</button>
-  </div>
-</div>
 
 
 <div class="actions"><button class="primary" type="submit">💾 Simpan Titik</button><button class="gold" type="button" onclick="pdfOne()">PDF Titik Ini</button></div>
@@ -378,7 +368,7 @@ function read(){let x={};new FormData(form).forEach((v,k)=>x[k]=v);return x}
 
 function fill(d={}){[...form.elements].forEach(el=>{if(el.name)el.value=d[el.name]!==undefined?d[el.name]:''})}
 
-function defaults(){const name=selectedVillageName();return {desa:name,kecamatan:'Binakal',kabupaten:'Bondowoso',provinsi:'Jawa Timur',sumber:'Dana Desa',tahun:'2024',satuan:'Orang',pelaksana:'TPK Desa '+name}}
+function defaults(){const name=selectedVillageName();return {desa:name,kecamatan:'Binakal',kabupaten:'Bondowoso',provinsi:'Jawa Timur',sumber:'Dana Desa',tahun:'',satuan:'Orang',pelaksana:'TPK Desa '+name}}
 
 function choose(n){
 
@@ -550,7 +540,7 @@ function drawRecap(){
         '</tr></thead><tbody>';
       nums.forEach(n=>{
         const d=v.points[n]||{};
-        out+='<tr><td>'+n+'</td><td>'+esc(d.nama)+'</td><td>'+esc(d.dusun)+'</td><td>'+esc(d.rt)+' / '+esc(d.rw)+'</td><td>'+esc(d.sumber)+'</td><td>'+esc(d.tahun)+'</td><td>'+esc(d.anggaran?rupiah(d.anggaran):'')+'</td><td>'+esc(d.volume)+'</td><td>'+esc(d.mulai)+'</td><td>'+esc(d.selesai)+'</td><td>'+esc(d.pelaksana)+'</td><td>'+esc(d.pemanfaat)+' '+esc(d.satuan)+'</td><td>'+esc(d.miskin)+'</td><td>'+esc(d.sebelum)+'</td><td>'+esc(d.sesudah)+'</td><td><button class="primary" type="button" onclick="lihatRecap(&quot;'+v.key+'&quot;,'+n+')">Lihat</button> <button class="light" type="button" onclick="editRecap(&quot;'+v.key+'&quot;,'+n+')">Edit</button></td></tr>';
+        out+='<tr><td>'+n+'</td><td>'+esc(d.nama)+'</td><td>'+esc(d.dusun)+'</td><td>'+esc(d.rt)+' / '+esc(d.rw)+'</td><td>'+esc(d.sumber)+'</td><td>'+esc(d.tahun)+'</td><td>'+esc(d.anggaran?rupiah(d.anggaran):'')+'</td><td>'+esc(d.volume)+'</td><td>'+esc(d.mulai)+'</td><td>'+esc(d.selesai)+'</td><td>'+esc(d.pelaksana)+'</td><td>'+esc(d.pemanfaat)+' '+esc(d.satuan)+'</td><td>'+esc(d.miskin)+'</td><td>'+esc(d.sebelum)+'</td><td>'+esc(d.sesudah)+'</td><td><button class="light" type="button" onclick="editRecap(&quot;'+v.key+'&quot;,'+n+')">Edit</button> <button class="gold" type="button" onclick="pdfRecap(&quot;'+v.key+'&quot;,'+n+')">Unduh PDF</button></td></tr>';
       });
       out+='</tbody></table></div>';
     }
@@ -564,6 +554,18 @@ function editRecap(key,n){
   village=key;
   showMenu('input');
   choose(n);
+}
+
+function pdfRecap(key,n){
+  const desa=store.villages[key];
+  const data=desa?.points?.[n];
+  if(!data){alert('Data titik tidak ditemukan.');return}
+  const PDF=lib();
+  if(!PDF)return;
+  const pdf=new PDF({unit:'mm',format:'a4'});
+  addPage(pdf,n,data,true,desa.name||('Desa '+key));
+  const safeName=String(desa.name||key).replace(/[^a-z0-9_-]+/gi,'_');
+  pdf.save('Praktik_Baik_'+safeName+'_Titik_'+n+'.pdf');
 }
 
 choose(1);
