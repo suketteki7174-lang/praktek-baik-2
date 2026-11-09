@@ -836,10 +836,17 @@ async function sinkronkanTitikAktif(){
 }
 async function sinkronkanSemua(){
   try{
-    const keys=['A','B','C','D','E','F','G','H'];let done=0,total=Object.values(store.villages).reduce((a,v)=>a+Object.keys(v.points).length,0);
-    if(!total){alert('Belum ada data untuk disinkronkan.');return}
-    for(const k of keys){for(const n of Object.keys(store.villages[k].points).map(Number).sort((a,b)=>a-b)){pbStatus(`Sinkronisasi ${done+1}/${total}: ${store.villages[k].name}, titik ${n}...`);await pbSyncOne(k,n);done++}}
-    pbStatus(`Selesai. ${done} titik telah disinkronkan ke Supabase.`);alert(`${done} titik berhasil disinkronkan ke Supabase.`)
+    const keys=['A','B','C','D','E','F','G','H'];
+    const jobs=[];
+    for(const k of keys)for(const [num,d] of Object.entries(store.villages[k]?.points||{})){
+      const localChanged=Date.parse(d?._pbLocalUpdatedAt||'')||0;
+      const cloudKnown=Date.parse(d?._pbCloudUpdatedAt||'')||0;
+      if(localChanged>0 && localChanged>cloudKnown)jobs.push([k,Number(num)]);
+    }
+    let done=0,total=jobs.length;
+    if(!total){pbStatus('Tidak ada perubahan lokal yang menunggu sinkronisasi.');alert('Tidak ada perubahan lokal yang belum tersinkron.');return}
+    for(const [k,n] of jobs){pbStatus(`Sinkronisasi ${done+1}/${total}: ${store.villages[k].name}, titik ${n}...`);await pbSyncOne(k,n);done++}
+    pbStatus(`Selesai. ${done} perubahan lokal telah disinkronkan ke Supabase.`);alert(`${done} perubahan lokal berhasil disinkronkan ke Supabase.`)
   }catch(e){pbStatus('Sinkronisasi terhenti: '+e.message);alert('Sinkronisasi terhenti: '+e.message+'\nData lokal tetap aman.')}
 }
 // ===== REALTIME: menerima perubahan dari HP/perangkat lain =====
@@ -946,7 +953,19 @@ async function pbStartRealtime(){
 }
 window.addEventListener('load',()=>setTimeout(pbStartRealtime,1500));
 
-window.addEventListener('online',()=>{pbStatus('Internet tersedia. Mengirim data lokal yang belum tersinkron secara otomatis…');for(const k of ['A','B','C','D','E','F','G','H'])for(const n of Object.keys(store.villages[k]?.points||{}))pbAutoSyncPoint(k,Number(n));});
+// Jangan unggah semua cache lokal saat internet kembali: cache lama bisa
+// menghidupkan kembali titik yang sudah dihapus dari server pada perangkat lain.
+// Hanya kirim titik yang memiliki penanda perubahan lokal lebih baru dari versi cloud.
+window.addEventListener('online',()=>{
+  pbStatus('Internet tersedia. Memeriksa perubahan lokal yang belum tersinkron…');
+  for(const k of ['A','B','C','D','E','F','G','H']){
+    for(const [num,d] of Object.entries(store.villages[k]?.points||{})){
+      const localChanged=Date.parse(d?._pbLocalUpdatedAt||'')||0;
+      const cloudKnown=Date.parse(d?._pbCloudUpdatedAt||'')||0;
+      if(localChanged>0 && localChanged>cloudKnown)pbAutoSyncPoint(k,Number(num));
+    }
+  }
+});
 Promise.resolve().then(()=>pbDrawMedia().catch(e=>console.warn('Media lokal:',e)));
 
 
