@@ -489,7 +489,20 @@ function draw(){let p=points(),ns=Object.keys(p).map(Number).sort((a,b)=>a-b),to
 
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-function del(n){if(confirm('Hapus data titik '+n+' di '+store.villages[village].name+'?')){delete points()[n];persist();if(cur===n){form.reset();choose(n)}}}
+async function del(n){
+  if(!confirm('Hapus permanen data titik '+n+' di '+store.villages[village].name+' beserta foto/video dari HP dan server?'))return;
+  try{
+    const sb=await pbSupabaseReady();
+    const {data:row,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('media').eq('kode_desa',village).eq('titik',Number(n)).maybeSingle();
+    if(readErr)throw readErr;
+    const paths=(row?.media||[]).map(x=>x.path).filter(Boolean);
+    for(let i=0;i<paths.length;i+=100){const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove(paths.slice(i,i+100));if(error)throw error;}
+    const {error:delErr}=await sb.from(PB_SUPABASE_TABLE).delete().eq('kode_desa',village).eq('titik',Number(n));
+    if(delErr)throw delErr;
+    const db=await pbDb();await new Promise((resolve,reject)=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();req.onsuccess=()=>{(req.result||[]).filter(x=>x.group===`${village}_${n}_foto`||x.group===`${village}_${n}_video`).forEach(x=>st.delete(x.id));};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+    delete points()[n];persist();if(cur===n){form.reset();choose(n)}await pbDrawMedia();pbStatus('Titik dan dokumentasinya dihapus dari HP dan server.');
+  }catch(e){console.error(e);alert('Titik belum dihapus dari server: '+e.message+'\nData lokal dipertahankan. Periksa izin DELETE dan Storage pada Supabase.');}
+}
 
 function lib(){if(!window.jspdf?.jsPDF){alert('Pustaka PDF belum termuat. Periksa koneksi internet lalu muat ulang. Data tetap tersimpan di perangkat.');return null}return window.jspdf.jsPDF}
 
@@ -618,10 +631,14 @@ async function pbMediaLoad(type){
 }
 async function pbMediaDelete(id){
   const db=await pbDb();
-  return new Promise((resolve,reject)=>{
-    const tx=db.transaction(PB_MEDIA_STORE,'readwrite');tx.objectStore(PB_MEDIA_STORE).delete(id);
-    tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
-  });
+  const item=await new Promise((resolve,reject)=>{const req=db.transaction(PB_MEDIA_STORE,'readonly').objectStore(PB_MEDIA_STORE).get(id);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  if(item?.cloudPath){const sb=await pbSupabaseReady();const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove([item.cloudPath]);if(error)throw error;}
+  if(item){
+    const sb=await pbSupabaseReady();const {data:row,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('media').eq('kode_desa',village).eq('titik',Number(cur)).maybeSingle();if(readErr)throw readErr;
+    const next=(row?.media||[]).filter(x=>x.path!==item.cloudPath && !(x.name===item.name&&x.type===item.type&&Number(x.size||0)===Number(item.size||0)));
+    const {error}=await sb.from(PB_SUPABASE_TABLE).update({media:next,updated_at:new Date().toISOString()}).eq('kode_desa',village).eq('titik',Number(cur));if(error)throw error;
+  }
+  return new Promise((resolve,reject)=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite');tx.objectStore(PB_MEDIA_STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
 }
 function pbKey(){return `${village}_${cur}`}
 function pbStatus(msg){const el=document.getElementById('syncStatus');if(el)el.textContent='Status: '+msg}
@@ -875,7 +892,15 @@ async function pbStartRealtime(){
     pbRealtimeChannel=sb.channel('praktik-baik-kegiatan-live')
       .on('postgres_changes',{event:'*',schema:'public',table:PB_SUPABASE_TABLE},async payload=>{
         try{
-          if(payload.eventType==='DELETE')return;
+          if(payload.eventType==='DELETE'){
+            const old=payload.old||{},key=String(old.kode_desa||''),n=Number(old.titik);
+            if(['A','B','C','D','E','F','G','H'].includes(key)&&Number.isInteger(n)){
+              if(store.villages[key]?.points)delete store.villages[key].points[n];
+              const db=await pbDb();await new Promise(resolve=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();req.onsuccess=()=>{(req.result||[]).filter(x=>x.group===`${key}_${n}_foto`||x.group===`${key}_${n}_video`).forEach(x=>st.delete(x.id));};tx.oncomplete=resolve;tx.onerror=resolve;});
+              persist();if(key===village&&n===cur)await pbDrawMedia();pbStatus(`Penghapusan diterima dari server: ${store.villages[key]?.name||key}, titik ${n}.`);
+            }
+            return;
+          }
           const applied=await pbApplyCloudRow(payload.new);
           if(!applied)pbStatus('Ada perubahan server, tetapi data lokal yang belum tersinkron dilindungi agar tidak tertimpa.');
         }catch(e){console.warn('Realtime:',e);pbStatus('Realtime: '+e.message);}
