@@ -326,7 +326,7 @@ a{overflow-wrap:anywhere}
     <button type="button" class="light" onclick="document.getElementById('videoTitik').click()">＋ Pilih Video dari Galeri</button>
     <span id="videoCount" class="empty">0/2 video</span>
   </div>
-  <small class="empty">Tekan Tambah Video berkali-kali untuk menambahkan video satu per satu. Video lama tetap tersimpan.</small>
+  <small class="empty">Setelah merekam, tekan centang/Gunakan Video/Selesai pada kamera agar file dikirim kembali ke aplikasi. Video lama tetap tersimpan.</small>
   <div id="videoPreview" class="media-preview"></div>
 </div>
 <div class="section">H. STATUS PENYIMPANAN ONLINE</div>
@@ -671,10 +671,41 @@ function pbOpenCamera(id){
 }
 
 async function pbHandleMediaInput(type,input){
-  // FileList disalin sebelum input dikosongkan, lalu baru dibersihkan setelah proses simpan selesai.
-  const files=Array.from(input.files||[]);
-  if(!files.length){pbStatus('Kamera tidak mengirim foto. Buka kamera lagi dan konfirmasi Gunakan Foto.');return}
-  try{await pbAddFiles(type,files);}
+  // Android kadang mengisi FileList sedikit terlambat setelah kembali dari aplikasi kamera.
+  let files=Array.from(input.files||[]);
+  if(!files.length){
+    await new Promise(resolve=>setTimeout(resolve,350));
+    files=Array.from(input.files||[]);
+  }
+  if(!files.length){
+    const pesan=type==='video'
+      ? 'Kamera selesai, tetapi HP tidak mengirim file video ke browser. Setelah merekam, tekan tanda centang/Gunakan Video/Selesai pada kamera sampai kembali ke aplikasi.'
+      : 'Kamera tidak mengirim file foto. Setelah mengambil foto, tekan Gunakan Foto/Selesai.';
+    pbStatus(pesan);alert(pesan);input.value='';return;
+  }
+  try{
+    // Beberapa kamera Android memberi MIME kosong atau application/octet-stream.
+    // Untuk hasil dari tombol Rekam Video, kenali sebagai video bila file benar-benar berisi data.
+    if(type==='video' && input.id==='videoKamera'){
+      files=files.filter(f=>f && f.size>0).map((f,i)=>{
+        const mime=String(f.type||'').toLowerCase();
+        if(mime.startsWith('video/'))return f;
+        const name=f.name||`rekaman_${Date.now()}_${i}.mp4`;
+        const ext=(name.split('.').pop()||'').toLowerCase();
+        const known=['mp4','mov','m4v','3gp','webm','mkv'].includes(ext);
+        if(!mime || mime==='application/octet-stream'){
+          const inferred=ext==='3gp'?'video/3gpp':ext==='mov'?'video/quicktime':ext==='webm'?'video/webm':'video/mp4';
+          return new File([f],name,{type:inferred,lastModified:f.lastModified||Date.now()});
+        }
+        if(!known && mime.startsWith('application/'))
+          return new File([f],name,{type:'video/mp4',lastModified:f.lastModified||Date.now()});
+        return f;
+      });
+    }
+    if(!files.length)throw new Error('File rekaman kosong. Silakan rekam ulang.');
+    await pbAddFiles(type,files);
+    pbStatus(`${files.length} ${type} berhasil dimasukkan ke aplikasi.`);
+  }
   catch(err){alert(`Gagal menyimpan ${type}: ${err.message}`);pbStatus(`Gagal menyimpan ${type}: ${err.message}`);}
   finally{input.value='';}
 }
