@@ -911,7 +911,37 @@ async function pbStartRealtime(){
       });
     const {data,error}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,desa,titik,data,media,updated_at');
     if(error)throw error;
-    for(const row of (data||[]))await pbApplyCloudRow(row);
+    // Rekonsiliasi saat aplikasi dibuka: hapus cache lokal yang sebelumnya
+    // sudah pernah tersinkron tetapi sekarang tidak ada lagi di server.
+    // Data lokal yang belum pernah tersinkron atau berubah setelah sync tetap dilindungi.
+    const cloudRows=data||[];
+    const cloudKeys=new Set(cloudRows.map(r=>`${String(r.kode_desa)}_${Number(r.titik)}`));
+    const removedGroups=[];
+    for(const key of ['A','B','C','D','E','F','G','H']){
+      const pts=store.villages[key]?.points||{};
+      for(const [num,local] of Object.entries(pts)){
+        const n=Number(num),cloudKey=`${key}_${n}`;
+        if(cloudKeys.has(cloudKey))continue;
+        const cloudKnown=Date.parse(local?._pbCloudUpdatedAt||'')||0;
+        const localChanged=Date.parse(local?._pbLocalUpdatedAt||'')||0;
+        if(cloudKnown>0 && localChanged<=cloudKnown){
+          delete pts[num];removedGroups.push(`${key}_${n}_foto`,`${key}_${n}_video`);
+          if(key===village&&n===cur)await pbDrawMedia();
+        }
+      }
+    }
+    if(removedGroups.length){
+      const db=await pbDb();
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();
+        req.onsuccess=()=>{(req.result||[]).filter(x=>removedGroups.includes(x.group)).forEach(x=>st.delete(x.id));};
+        tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+      });
+      persist();draw();
+      if($('#recapMenu')&&$('#recapMenu').style.display!=='none')drawRecap();
+      pbStatus('Data lokal yang sudah dihapus dari server berhasil diselaraskan.');
+    }
+    for(const row of cloudRows)await pbApplyCloudRow(row);
   }catch(e){console.warn('Gagal memulai Realtime:',e);pbStatus('Realtime belum aktif: '+e.message);}
 }
 window.addEventListener('load',()=>setTimeout(pbStartRealtime,1500));
