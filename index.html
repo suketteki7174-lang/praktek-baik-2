@@ -307,9 +307,9 @@ a{overflow-wrap:anywhere}
 <div class="field full">
   <label>Dokumentasi foto titik ini (maksimal 10 foto)</label>
   <input id="fotoTitik" type="file" accept="image/*" multiple style="display:none">
-  <input id="fotoKamera" type="file" accept="image/*" capture="environment" style="display:none">
+  <input id="fotoKamera" type="file" accept="image/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   <div class="actions">
-    <button type="button" class="primary" onclick="document.getElementById('fotoKamera').click()">📷 Ambil Foto dengan Kamera</button>
+    <button type="button" class="primary" onclick="pbOpenCamera('fotoKamera')">📷 Ambil Foto dengan Kamera</button>
     <button type="button" class="light" onclick="document.getElementById('fotoTitik').click()">＋ Pilih dari Galeri</button>
     <span id="fotoCount" class="empty">0/10 foto</span>
   </div>
@@ -320,9 +320,9 @@ a{overflow-wrap:anywhere}
 <div class="field full">
   <label>Dokumentasi video titik ini (maksimal 2 video)</label>
   <input id="videoTitik" type="file" accept="video/*" multiple style="display:none">
-  <input id="videoKamera" type="file" accept="video/*" capture="environment" style="display:none">
+  <input id="videoKamera" type="file" accept="video/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   <div class="actions">
-    <button type="button" class="primary" onclick="document.getElementById('videoKamera').click()">🎥 Rekam Video</button>
+    <button type="button" class="primary" onclick="pbOpenCamera('videoKamera')">🎥 Rekam Video</button>
     <button type="button" class="light" onclick="document.getElementById('videoTitik').click()">＋ Pilih Video dari Galeri</button>
     <span id="videoCount" class="empty">0/2 video</span>
   </div>
@@ -635,8 +635,8 @@ async function pbDrawMedia(){
 }
 function pbFileMatches(type,file){
   const mime=String(file.type||'').toLowerCase(),name=String(file.name||'').toLowerCase();
-  if(type==='foto')return mime.startsWith('image/')||/\.(jpe?g|png|webp|gif|heic|heif|bmp)$/i.test(name);
-  return mime.startsWith('video/')||/\.(mp4|mov|m4v|3gp|webm|mkv)$/i.test(name);
+  if(type==='foto')return mime.startsWith('image/')||/\.(jpe?g|png|webp|gif|heic|heif|bmp)$/i.test(name)||(!mime&&file.size>0);
+  return mime.startsWith('video/')||/\.(mp4|mov|m4v|3gp|webm|mkv)$/i.test(name)||(!mime&&file.size>0);
 }
 async function pbAddFiles(type,fileList){
   // Salin FileList segera; beberapa browser Android mengosongkan input setelah kembali dari kamera.
@@ -654,8 +654,11 @@ async function pbAddFiles(type,fileList){
     valid.forEach((file,i)=>{
       const ext=(file.name||'').split('.').pop()||'';
       const mime=file.type||(type==='foto'?'image/jpeg':'video/mp4');
+      const fallbackExt=type==='foto'?'jpg':'mp4';
+      const safeName=file.name||`${type}_${Date.now()}.${fallbackExt}`;
+      const storedBlob=file.type?file:file.slice(0,file.size,mime);
       const id=`${key}_${Date.now()}_${i}_${Math.random().toString(36).slice(2,7)}`;
-      st.put({id,group:key,type,name:file.name||`${type}_${Date.now()}.${ext|| (type==='foto'?'jpg':'mp4')}`,mime,size:file.size,blob:file,addedAt:Date.now()});
+      st.put({id,group:key,type,name:safeName,mime,size:file.size,blob:storedBlob,addedAt:Date.now()});
     });
     tx.oncomplete=()=>resolve();
     tx.onerror=()=>reject(tx.error||new Error('Transaksi penyimpanan gagal.'));
@@ -666,6 +669,14 @@ async function pbAddFiles(type,fileList){
   pbStatus(`${saved.length} ${type} tersimpan di HP untuk ${store.villages[village].name}, titik ${cur}.`);
   if(saved.length<old.length+valid.length)throw new Error('File belum terbaca kembali setelah disimpan. Coba ulangi dan periksa ruang penyimpanan HP.');
 }
+function pbOpenCamera(id){
+  const input=document.getElementById(id);
+  if(!input){alert('Tombol kamera tidak menemukan input '+id);return}
+  // Kosongkan nilai sebelumnya agar pengambilan foto berikutnya tetap memicu event change.
+  input.value='';
+  input.click();
+}
+
 async function pbHandleMediaInput(type,input){
   // FileList disalin sebelum input dikosongkan, lalu baru dibersihkan setelah proses simpan selesai.
   const files=Array.from(input.files||[]);
