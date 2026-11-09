@@ -465,7 +465,7 @@ function saveVillageName(){let name=$('#villageName').value.trim();if(!name){ale
 
 function newEntry(){let n=1;while(n<=10&&points()[n])n++;if(n>10){alert('Sepuluh titik untuk '+store.villages[village].name+' sudah terisi. Pilih titik untuk mengedit.');return}form.reset();choose(n)}
 
-form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.');setTimeout(()=>pbAutoSyncPoint(village,cur),250)});
+form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();data._pbExplicitRecreate=true;points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.');setTimeout(()=>pbAutoSyncPoint(village,cur),250)});
 
 function clearForm(){if(confirm('Kosongkan form? Data tersimpan tidak dihapus.')){form.reset();fill(defaults());form.elements.desa.value=store.villages[village].name;form.elements.kecamatan.value='Binakal';form.elements.kabupaten.value='Bondowoso';form.elements.provinsi.value='Jawa Timur';form.elements.pelaksana.value='TPK Desa '+store.villages[village].name}}
 
@@ -496,6 +496,7 @@ async function del(n){
     const {data:row,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('media').eq('kode_desa',village).eq('titik',Number(n)).maybeSingle();
     if(readErr)throw readErr;
     const paths=(row?.media||[]).map(x=>x.path).filter(Boolean);
+    await pbWriteTombstone(village,n); // simpan tanda hapus dahulu agar perangkat lain tidak menghidupkan data lama
     for(let i=0;i<paths.length;i+=100){const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove(paths.slice(i,i+100));if(error)throw error;}
     const {error:delErr}=await sb.from(PB_SUPABASE_TABLE).delete().eq('kode_desa',village).eq('titik',Number(n));
     if(delErr)throw delErr;
@@ -537,7 +538,7 @@ async function erase(){
     const {data:rows,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,titik,media');
     if(readErr)throw new Error('Tidak bisa membaca data server: '+readErr.message);
     const paths=[];
-    for(const row of (rows||[]))for(const m of (row.media||[]))if(m.path)paths.push(m.path);
+    for(const row of (rows||[])){await pbWriteTombstone(row.kode_desa,row.titik);for(const m of (row.media||[]))if(m.path)paths.push(m.path);}
     for(let i=0;i<paths.length;i+=100){const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove(paths.slice(i,i+100));if(error)throw new Error('Gagal menghapus foto/video server: '+error.message);}
     const {error:delErr}=await sb.from(PB_SUPABASE_TABLE).delete().in('kode_desa',['A','B','C','D','E','F','G','H']);
     if(delErr)throw new Error('Gagal menghapus data server: '+delErr.message);
@@ -775,6 +776,32 @@ const PB_SUPABASE_URL='https://afzbcqnbgxtpffrqorfy.supabase.co';
 const PB_SUPABASE_KEY='sb_publishable_bLIv3hwfommmCUo3PIacQw_4_M1Z2zq';
 const PB_SUPABASE_BUCKET='dokumentasi';
 const PB_SUPABASE_TABLE='kegiatan';
+const PB_TOMBSTONE_TABLE='kegiatan_deleted';
+async function pbCheckDeleted(key,n){
+  const sb=await pbSupabaseReady();
+  const {data,error}=await sb.from(PB_TOMBSTONE_TABLE).select('kode_desa,titik').eq('kode_desa',String(key)).eq('titik',Number(n)).maybeSingle();
+  if(error)throw new Error('Pemeriksaan penanda hapus gagal: '+error.message+' (pastikan tabel kegiatan_deleted sudah dibuat)');
+  return !!data;
+}
+async function pbWriteTombstone(key,n){
+  const sb=await pbSupabaseReady();
+  const {error}=await sb.from(PB_TOMBSTONE_TABLE).upsert({kode_desa:String(key),titik:Number(n),deleted_at:new Date().toISOString()},{onConflict:'kode_desa,titik'});
+  if(error)throw new Error('Gagal menyimpan penanda penghapusan: '+error.message);
+}
+async function pbRemoveTombstone(key,n){
+  const sb=await pbSupabaseReady();
+  const {error}=await sb.from(PB_TOMBSTONE_TABLE).delete().eq('kode_desa',String(key)).eq('titik',Number(n));
+  if(error)throw error;
+}
+async function pbApplyTombstone(key,n){
+  key=String(key);n=Number(n);
+  if(!['A','B','C','D','E','F','G','H'].includes(key)||!Number.isInteger(n)||n<1||n>10)return;
+  if(store.villages[key]?.points)delete store.villages[key].points[n];
+  const db=await pbDb();
+  await new Promise((resolve,reject)=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();req.onsuccess=()=>{(req.result||[]).filter(x=>x.group===`${key}_${n}_foto`||x.group===`${key}_${n}_video`).forEach(x=>st.delete(x.id));};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+  persist();if(key===village&&n===cur){form.reset();choose(n);await pbDrawMedia();}
+}
+
 async function pbSupabaseReady(){
   if(window.pbSupabase)return window.pbSupabase;
   const mod=await import('https://esm.sh/@supabase/supabase-js@2');
@@ -801,6 +828,8 @@ async function pbLocalMediaFor(key,n){
 async function pbSyncOne(key,n){
   const sb=await pbSupabaseReady(),v=store.villages[key],d=v?.points?.[n];
   if(!d)throw new Error(`Data titik ${n} belum disimpan.`);
+  if(d._pbExplicitRecreate){await pbRemoveTombstone(key,n);delete d._pbExplicitRecreate;}
+  else if(await pbCheckDeleted(key,n))throw new Error(`Titik ${n} di desa ${key} memiliki penanda sudah dihapus di server. Simpan ulang secara manual jika memang ingin membuatnya kembali.`);
   const media=[];
   const files=await pbLocalMediaFor(key,n);
   for(const file of files){
@@ -901,21 +930,21 @@ async function pbStartRealtime(){
         try{
           if(payload.eventType==='DELETE'){
             const old=payload.old||{},key=String(old.kode_desa||''),n=Number(old.titik);
-            if(['A','B','C','D','E','F','G','H'].includes(key)&&Number.isInteger(n)){
-              if(store.villages[key]?.points)delete store.villages[key].points[n];
-              const db=await pbDb();await new Promise(resolve=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();req.onsuccess=()=>{(req.result||[]).filter(x=>x.group===`${key}_${n}_foto`||x.group===`${key}_${n}_video`).forEach(x=>st.delete(x.id));};tx.oncomplete=resolve;tx.onerror=resolve;});
-              persist();if(key===village&&n===cur)await pbDrawMedia();pbStatus(`Penghapusan diterima dari server: ${store.villages[key]?.name||key}, titik ${n}.`);
-            }
+            if(['A','B','C','D','E','F','G','H'].includes(key)&&Number.isInteger(n))await pbApplyTombstone(key,n);
             return;
           }
           const applied=await pbApplyCloudRow(payload.new);
           if(!applied)pbStatus('Ada perubahan server, tetapi data lokal yang belum tersinkron dilindungi agar tidak tertimpa.');
         }catch(e){console.warn('Realtime:',e);pbStatus('Realtime: '+e.message);}
       })
+      .on('postgres_changes',{event:'*',schema:'public',table:PB_TOMBSTONE_TABLE},async payload=>{try{const r=payload.new||payload.old;if(r?.kode_desa&&r?.titik)await pbApplyTombstone(r.kode_desa,r.titik);pbStatus('Penanda penghapusan diterima dari server.');}catch(e){console.warn('Realtime tombstone:',e);}})
       .subscribe(status=>{
         if(status==='SUBSCRIBED')pbStatus('Realtime aktif. Menunggu perubahan dari perangkat lain.');
         else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')pbStatus('Realtime belum tersambung. Periksa internet dan pengaturan Supabase.');
       });
+    const {data:deletedRows,error:deletedErr}=await sb.from(PB_TOMBSTONE_TABLE).select('kode_desa,titik');
+    if(deletedErr)throw new Error('Tidak bisa membaca penanda penghapusan: '+deletedErr.message);
+    for(const tomb of (deletedRows||[]))await pbApplyTombstone(tomb.kode_desa,tomb.titik);
     const {data,error}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,desa,titik,data,media,updated_at');
     if(error)throw error;
     // Rekonsiliasi saat aplikasi dibuka: hapus cache lokal yang sebelumnya
@@ -948,7 +977,7 @@ async function pbStartRealtime(){
       if($('#recapMenu')&&$('#recapMenu').style.display!=='none')drawRecap();
       pbStatus('Data lokal yang sudah dihapus dari server berhasil diselaraskan.');
     }
-    for(const row of cloudRows)await pbApplyCloudRow(row);
+    for(const row of cloudRows){if(!(await pbCheckDeleted(row.kode_desa,row.titik)))await pbApplyCloudRow(row);}
   }catch(e){console.warn('Gagal memulai Realtime:',e);pbStatus('Realtime belum aktif: '+e.message);}
 }
 window.addEventListener('load',()=>setTimeout(pbStartRealtime,1500));
