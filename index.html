@@ -260,7 +260,7 @@ a{overflow-wrap:anywhere}
 
 <div class="section">A. IDENTITAS KEGIATAN</div><div class="grid">
 
-<div class="field full"><label>1. Nama kegiatan (sesuai RAB) *</label><input name="nama" required placeholder="Contoh: Pemasangan PJU"></div>
+<div class="field full"><label>1. Nama kegiatan (sesuai RAB) *</label><input name="nama" required></div>
 
 <div class="field"><label>2. Desa *</label><input name="desa" required value="Gadingsari" readonly></div><div class="field"><label>3. Kecamatan *</label><input name="kecamatan" required value="Binakal" readonly></div>
 
@@ -268,15 +268,15 @@ a{overflow-wrap:anywhere}
 
 <div class="field"><label>6. RT</label><input name="rt"></div><div class="field"><label>7. RW</label><input name="rw"></div>
 
-<div class="field"><label>8. Sumber dana *</label><select name="sumber" required><option>Dana Desa</option><option>Alokasi Dana Desa</option><option>Bantuan Keuangan</option><option>Lainnya</option></select></div>
+<div class="field"><label>8. Sumber dana *</label><select name="sumber" required><option value="" selected></option><option>Dana Desa</option><option>Alokasi Dana Desa</option><option>Bantuan Keuangan</option><option>Lainnya</option></select></div>
 
-<div class="field"><label>9. Tahun anggaran *</label><input name="tahun" type="number" min="2000" max="2100" required value="2024"></div>
+<div class="field"><label>9. Tahun anggaran *</label><input name="tahun" type="number" min="2000" max="2100" required></div>
 
-<div class="field full"><label>10. Jumlah anggaran (Rp) *</label><input name="anggaran" type="number" min="0" required placeholder="Contoh: 100000000"></div></div>
+<div class="field full"><label>10. Jumlah anggaran (Rp) *</label><input name="anggaran" type="number" min="0" required></div></div>
 
 <div class="section">B. VOLUME DAN WAKTU PELAKSANAAN</div><div class="grid">
 
-<div class="field full"><label>11. Volume pekerjaan *</label><input name="volume" required placeholder="Contoh: 5 unit / 100 meter / 1 paket"></div>
+<div class="field full"><label>11. Volume pekerjaan *</label><input name="volume" required></div>
 
 <div class="field"><label>12. Tanggal mulai</label><input name="mulai" type="date"></div><div class="field"><label>13. Tanggal selesai</label><input name="selesai" type="date"></div>
 
@@ -284,50 +284,24 @@ a{overflow-wrap:anywhere}
 
 <div class="section">C. PENERIMA MANFAAT</div><div class="grid">
 
-<div class="field"><label>17. Total jumlah pemanfaat</label><input name="pemanfaat" type="number" min="0"></div><div class="field"><label>Satuan pemanfaat</label><select name="satuan"><option>Orang</option><option>KK</option></select></div>
+<div class="field"><label>17. Total jumlah pemanfaat</label><input name="pemanfaat" type="number" min="0"></div><div class="field"><label>Satuan pemanfaat</label><select name="satuan"><option value="" selected></option><option>Orang</option><option>KK</option></select></div>
 
 <div class="field full"><label>18. Pemanfaat dari keluarga miskin</label><input name="miskin" type="number" min="0"></div></div>
 
 <div class="section">D. KONDISI DAN PERMASALAHAN</div><div class="grid">
 
-<div class="field full"><label>21. Kondisi sebelum kegiatan</label><textarea name="sebelum" placeholder="Jelaskan kondisi awal/permasalahan..."></textarea></div>
+<div class="field full"><label>21. Kondisi sebelum kegiatan</label><textarea name="sebelum"></textarea></div>
 
-<div class="field full"><label>23. Kondisi sesudah kegiatan</label><textarea name="sesudah" placeholder="Jelaskan perubahan setelah kegiatan..."></textarea></div></div>
+<div class="field full"><label>23. Kondisi sesudah kegiatan</label><textarea name="sesudah"></textarea></div></div>
 
 
 <div class="section">E. NARASI PRAKTIK BAIK</div>
 <div class="field full">
   <label>Narasi kegiatan (dapat dibuat otomatis lalu diedit)</label>
-  <textarea id="narasiPraktik" name="narasiPraktik" rows="7" placeholder="Narasi kegiatan akan disusun dari data yang diisi..."></textarea>
+  <textarea id="narasiPraktik" name="narasiPraktik" rows="7"></textarea>
   <div class="actions">
     <button type="button" class="light" onclick="buatNarasiOtomatis()">✨ Buat Narasi Otomatis</button>
   </div>
-</div>
-<div class="section">F. DOKUMENTASI FOTO (8–10 FOTO)</div>
-<div class="field full">
-  <label>Dokumentasi foto titik ini (maksimal 10 foto)</label>
-  <input id="fotoTitik" type="file" accept="image/*" multiple style="display:none">
-  <input id="fotoKamera" type="file" accept="image/*" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-  <div class="actions">
-    <button type="button" class="primary" onclick="pbStartLiveCamera()">📷 Ambil Foto dengan Kamera</button>
-    <button type="button" class="light" onclick="document.getElementById('fotoTitik').click()">＋ Pilih dari Galeri</button>
-    <span id="fotoCount" class="empty">0/10 foto</span>
-  </div>
-  <small class="empty">Tekan Tambah Foto berkali-kali untuk menambahkan foto secara bertahap. Foto lama tetap tersimpan.</small>
-  <div id="fotoPreview" class="media-preview"></div>
-</div>
-<div class="section">G. DOKUMENTASI VIDEO (1–2 VIDEO)</div>
-<div class="field full">
-  <label>Dokumentasi video titik ini (maksimal 2 video)</label>
-  <input id="videoTitik" type="file" accept="video/*,.mp4,.mov,.3gp,.webm,.m4v" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-  <input id="videoKamera" type="file" accept="video/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-  <div class="actions">
-    <button type="button" class="primary" onclick="pbStartVideoRecorder()">🎥 Rekam Video</button>
-    <button type="button" class="light" onclick="document.getElementById('videoTitik').click()">＋ Pilih Video dari Galeri</button>
-    <span id="videoCount" class="empty">0/2 video</span>
-  </div>
-  <small class="empty">Rekam langsung di aplikasi, tekan Selesai Rekam, lalu simpan. Video juga dapat dipilih dari galeri.</small>
-  <div id="videoPreview" class="media-preview"></div>
 </div>
 <div class="section">H. STATUS PENYIMPANAN ONLINE</div>
 <div class="field full">
@@ -465,7 +439,7 @@ function saveVillageName(){let name=$('#villageName').value.trim();if(!name){ale
 
 function newEntry(){let n=1;while(n<=10&&points()[n])n++;if(n>10){alert('Sepuluh titik untuk '+store.villages[village].name+' sudah terisi. Pilih titik untuk mengedit.');return}form.reset();choose(n)}
 
-form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();data._pbExplicitRecreate=true;points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.');setTimeout(()=>pbAutoSyncPoint(village,cur),250)});
+form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.');setTimeout(()=>pbAutoSyncPoint(village,cur),250)});
 
 function clearForm(){if(confirm('Kosongkan form? Data tersimpan tidak dihapus.')){form.reset();fill(defaults());form.elements.desa.value=store.villages[village].name;form.elements.kecamatan.value='Binakal';form.elements.kabupaten.value='Bondowoso';form.elements.provinsi.value='Jawa Timur';form.elements.pelaksana.value='TPK Desa '+store.villages[village].name}}
 
@@ -496,7 +470,6 @@ async function del(n){
     const {data:row,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('media').eq('kode_desa',village).eq('titik',Number(n)).maybeSingle();
     if(readErr)throw readErr;
     const paths=(row?.media||[]).map(x=>x.path).filter(Boolean);
-    await pbWriteTombstone(village,n); // simpan tanda hapus dahulu agar perangkat lain tidak menghidupkan data lama
     for(let i=0;i<paths.length;i+=100){const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove(paths.slice(i,i+100));if(error)throw error;}
     const {error:delErr}=await sb.from(PB_SUPABASE_TABLE).delete().eq('kode_desa',village).eq('titik',Number(n));
     if(delErr)throw delErr;
@@ -538,7 +511,7 @@ async function erase(){
     const {data:rows,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,titik,media');
     if(readErr)throw new Error('Tidak bisa membaca data server: '+readErr.message);
     const paths=[];
-    for(const row of (rows||[])){await pbWriteTombstone(row.kode_desa,row.titik);for(const m of (row.media||[]))if(m.path)paths.push(m.path);}
+    for(const row of (rows||[]))for(const m of (row.media||[]))if(m.path)paths.push(m.path);
     for(let i=0;i<paths.length;i+=100){const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove(paths.slice(i,i+100));if(error)throw new Error('Gagal menghapus foto/video server: '+error.message);}
     const {error:delErr}=await sb.from(PB_SUPABASE_TABLE).delete().in('kode_desa',['A','B','C','D','E','F','G','H']);
     if(delErr)throw new Error('Gagal menghapus data server: '+delErr.message);
@@ -766,7 +739,7 @@ function buatNarasiOtomatis(){
     `Pelaksanaan kegiatan berlokasi di ${val(d.dusun)||'[dusun]'}${val(d.rt)?', RT '+val(d.rt):''}${val(d.rw)?' RW '+val(d.rw):''}, dimulai pada ${val(d.mulai)||'[tanggal mulai]'}${val(d.selesai)?' sampai '+val(d.selesai):''}. Kegiatan dilaksanakan oleh ${val(d.pelaksana)||'TPK Desa '+store.villages[village].name}.`,
     `Kegiatan ini memberikan manfaat kepada ${val(d.pemanfaat)||'[jumlah]'} ${val(d.satuan)||'orang/KK'}, termasuk ${val(d.miskin)||'0'} penerima manfaat dari keluarga miskin.`,
     `Sebelum kegiatan dilaksanakan, kondisi yang dihadapi adalah: ${val(d.sebelum)||'[uraian kondisi awal]'}. Setelah kegiatan, kondisi menjadi: ${val(d.sesudah)||'[uraian kondisi setelah kegiatan]'}.`,
-    `Dengan pelaksanaan kegiatan tersebut, diharapkan kualitas pelayanan dan kesejahteraan masyarakat desa semakin meningkat. Dokumentasi foto dan video dilampirkan sebagai bukti pelaksanaan kegiatan.`
+    `Dengan pelaksanaan kegiatan tersebut, diharapkan kualitas pelayanan dan kesejahteraan masyarakat desa semakin meningkat.`
   ].join('\n\n');
   document.getElementById('narasiPraktik').value=narasi;
 }
@@ -776,32 +749,6 @@ const PB_SUPABASE_URL='https://afzbcqnbgxtpffrqorfy.supabase.co';
 const PB_SUPABASE_KEY='sb_publishable_bLIv3hwfommmCUo3PIacQw_4_M1Z2zq';
 const PB_SUPABASE_BUCKET='dokumentasi';
 const PB_SUPABASE_TABLE='kegiatan';
-const PB_TOMBSTONE_TABLE='kegiatan_deleted';
-async function pbCheckDeleted(key,n){
-  const sb=await pbSupabaseReady();
-  const {data,error}=await sb.from(PB_TOMBSTONE_TABLE).select('kode_desa,titik').eq('kode_desa',String(key)).eq('titik',Number(n)).maybeSingle();
-  if(error)throw new Error('Pemeriksaan penanda hapus gagal: '+error.message+' (pastikan tabel kegiatan_deleted sudah dibuat)');
-  return !!data;
-}
-async function pbWriteTombstone(key,n){
-  const sb=await pbSupabaseReady();
-  const {error}=await sb.from(PB_TOMBSTONE_TABLE).upsert({kode_desa:String(key),titik:Number(n),deleted_at:new Date().toISOString()},{onConflict:'kode_desa,titik'});
-  if(error)throw new Error('Gagal menyimpan penanda penghapusan: '+error.message);
-}
-async function pbRemoveTombstone(key,n){
-  const sb=await pbSupabaseReady();
-  const {error}=await sb.from(PB_TOMBSTONE_TABLE).delete().eq('kode_desa',String(key)).eq('titik',Number(n));
-  if(error)throw error;
-}
-async function pbApplyTombstone(key,n){
-  key=String(key);n=Number(n);
-  if(!['A','B','C','D','E','F','G','H'].includes(key)||!Number.isInteger(n)||n<1||n>10)return;
-  if(store.villages[key]?.points)delete store.villages[key].points[n];
-  const db=await pbDb();
-  await new Promise((resolve,reject)=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();req.onsuccess=()=>{(req.result||[]).filter(x=>x.group===`${key}_${n}_foto`||x.group===`${key}_${n}_video`).forEach(x=>st.delete(x.id));};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
-  persist();if(key===village&&n===cur){form.reset();choose(n);await pbDrawMedia();}
-}
-
 async function pbSupabaseReady(){
   if(window.pbSupabase)return window.pbSupabase;
   const mod=await import('https://esm.sh/@supabase/supabase-js@2');
@@ -828,8 +775,6 @@ async function pbLocalMediaFor(key,n){
 async function pbSyncOne(key,n){
   const sb=await pbSupabaseReady(),v=store.villages[key],d=v?.points?.[n];
   if(!d)throw new Error(`Data titik ${n} belum disimpan.`);
-  if(d._pbExplicitRecreate){await pbRemoveTombstone(key,n);delete d._pbExplicitRecreate;}
-  else if(await pbCheckDeleted(key,n))throw new Error(`Titik ${n} di desa ${key} memiliki penanda sudah dihapus di server. Simpan ulang secara manual jika memang ingin membuatnya kembali.`);
   const media=[];
   const files=await pbLocalMediaFor(key,n);
   for(const file of files){
@@ -930,21 +875,21 @@ async function pbStartRealtime(){
         try{
           if(payload.eventType==='DELETE'){
             const old=payload.old||{},key=String(old.kode_desa||''),n=Number(old.titik);
-            if(['A','B','C','D','E','F','G','H'].includes(key)&&Number.isInteger(n))await pbApplyTombstone(key,n);
+            if(['A','B','C','D','E','F','G','H'].includes(key)&&Number.isInteger(n)){
+              if(store.villages[key]?.points)delete store.villages[key].points[n];
+              const db=await pbDb();await new Promise(resolve=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite'),st=tx.objectStore(PB_MEDIA_STORE),req=st.getAll();req.onsuccess=()=>{(req.result||[]).filter(x=>x.group===`${key}_${n}_foto`||x.group===`${key}_${n}_video`).forEach(x=>st.delete(x.id));};tx.oncomplete=resolve;tx.onerror=resolve;});
+              persist();if(key===village&&n===cur)await pbDrawMedia();pbStatus(`Penghapusan diterima dari server: ${store.villages[key]?.name||key}, titik ${n}.`);
+            }
             return;
           }
           const applied=await pbApplyCloudRow(payload.new);
           if(!applied)pbStatus('Ada perubahan server, tetapi data lokal yang belum tersinkron dilindungi agar tidak tertimpa.');
         }catch(e){console.warn('Realtime:',e);pbStatus('Realtime: '+e.message);}
       })
-      .on('postgres_changes',{event:'*',schema:'public',table:PB_TOMBSTONE_TABLE},async payload=>{try{const r=payload.new||payload.old;if(r?.kode_desa&&r?.titik)await pbApplyTombstone(r.kode_desa,r.titik);pbStatus('Penanda penghapusan diterima dari server.');}catch(e){console.warn('Realtime tombstone:',e);}})
       .subscribe(status=>{
         if(status==='SUBSCRIBED')pbStatus('Realtime aktif. Menunggu perubahan dari perangkat lain.');
         else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')pbStatus('Realtime belum tersambung. Periksa internet dan pengaturan Supabase.');
       });
-    const {data:deletedRows,error:deletedErr}=await sb.from(PB_TOMBSTONE_TABLE).select('kode_desa,titik');
-    if(deletedErr)throw new Error('Tidak bisa membaca penanda penghapusan: '+deletedErr.message);
-    for(const tomb of (deletedRows||[]))await pbApplyTombstone(tomb.kode_desa,tomb.titik);
     const {data,error}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,desa,titik,data,media,updated_at');
     if(error)throw error;
     // Rekonsiliasi saat aplikasi dibuka: hapus cache lokal yang sebelumnya
@@ -977,7 +922,7 @@ async function pbStartRealtime(){
       if($('#recapMenu')&&$('#recapMenu').style.display!=='none')drawRecap();
       pbStatus('Data lokal yang sudah dihapus dari server berhasil diselaraskan.');
     }
-    for(const row of cloudRows){if(!(await pbCheckDeleted(row.kode_desa,row.titik)))await pbApplyCloudRow(row);}
+    for(const row of cloudRows)await pbApplyCloudRow(row);
   }catch(e){console.warn('Gagal memulai Realtime:',e);pbStatus('Realtime belum aktif: '+e.message);}
 }
 window.addEventListener('load',()=>setTimeout(pbStartRealtime,1500));
@@ -1088,74 +1033,9 @@ async function lihatRecap(key,n){
   const body=document.getElementById('recapDetailBody');
   const title=document.getElementById('recapDetailTitle');
   title.textContent=`Desa ${desa?.name||key} — Titik ${n}: ${data.nama||'Kegiatan'}`;
-  body.innerHTML='<p>Memuat narasi, foto, dan video...</p>';
-  modal.style.display='block';
-
   const safe=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let localMedia=[],cloudMedia=[],cloudNote='';
-  try{
-    // Baca semua dokumentasi lokal, lalu cocokkan berdasarkan desa + titik.
-    const db=await pbDb();
-    localMedia=await new Promise((resolve,reject)=>{
-      const req=db.transaction(PB_MEDIA_STORE,'readonly').objectStore(PB_MEDIA_STORE).getAll();
-      req.onsuccess=()=>{
-        const prefix=`${key}_${n}_`;
-        resolve((req.result||[]).filter(x=>{
-          const group=String(x.group||'');
-          const id=String(x.id||'');
-          return group===`${prefix}foto` || group===`${prefix}video` ||
-            id.startsWith(`${prefix}foto_`) || id.startsWith(`${prefix}video_`);
-        }));
-      };
-      req.onerror=()=>reject(req.error);
-    });
-  }catch(err){
-    cloudNote='Penyimpanan lokal tidak dapat dibaca: '+err.message;
-  }
-
-  // Ambil juga daftar media cloud dari Supabase agar rekap bisa dibuka di perangkat lain.
-  try{
-    const sb=await pbSupabaseReady();
-    const {data,error}=await sb.from(PB_SUPABASE_TABLE).select('media').eq('kode_desa',key).eq('titik',Number(n)).maybeSingle();
-    if(error)throw error;
-    if(data)cloudMedia=data.media||[];
-  }catch(err){cloudNote=cloudNote?cloudNote+'; Supabase: '+err.message:'Supabase belum dapat dibaca: '+err.message;}
-
-
-  // Gabungkan media lokal dan cloud; cocokkan cloudPath/path, ID file, serta nama+ukuran agar file yang sama tidak dobel.
-  const media=[...localMedia];
-  const sameMedia=(a,b)=>{
-    if(a.path&&b.path&&a.path===b.path)return true;
-    if(a.cloudPath&&b.path&&a.cloudPath===b.path)return true;
-    if(b.cloudPath&&a.path&&b.cloudPath===a.path)return true;
-    const aid=String(a.id||''),bpath=String(b.path||'');
-    if(aid&&bpath&&bpath.includes(aid))return true;
-    const an=String(a.name||'').trim().toLowerCase(),bn=String(b.name||'').trim().toLowerCase();
-    return !!an&&an===bn&&String(a.type||'')===String(b.type||'')&&Number(a.size||0)===Number(b.size||0);
-  };
-  cloudMedia.forEach(x=>{if(!media.some(local=>sameMedia(local,x)))media.push(x)});
-  const fotos=media.filter(x=>x.type==='foto');
-  const videos=media.filter(x=>x.type==='video');
-
-  let out='<h3>Narasi Praktik Baik</h3><div class="pb-detail-narrative">'+safe(data.narasiPraktik||'Narasi belum dibuat.')+'</div>';
-  out+='<h3>Dokumentasi Foto ('+fotos.length+')</h3><div class="pb-detail-media">';
-  if(fotos.length){
-    fotos.forEach(f=>{
-      const src=f.blob?URL.createObjectURL(f.blob):f.url;
-      if(src)out+='<div><img src="'+safe(src)+'" alt="'+safe(f.name||'Foto dokumentasi')+'" loading="lazy"><small>'+safe(f.name||'Foto dokumentasi')+'</small></div>';
-    });
-  }else out+='<p class="empty">Belum ada foto yang tersimpan untuk titik ini.</p>';
-  out+='</div><h3>Dokumentasi Video ('+videos.length+')</h3><div class="pb-detail-media">';
-  if(videos.length){
-    videos.forEach(vdo=>{
-      const src=vdo.blob?URL.createObjectURL(vdo.blob):vdo.url;
-      if(src)out+='<div><video src="'+safe(src)+'" controls playsinline preload="metadata"></video><small>'+safe(vdo.name||'Video dokumentasi')+'</small></div>';
-    });
-  }else out+='<p class="empty">Belum ada video yang tersimpan untuk titik ini.</p>';
-  out+='</div>';
-  if(cloudNote)out+='<p class="empty">Catatan: '+safe(cloudNote)+'</p>';
-  if(!fotos.length&&!videos.length)out+='<p class="empty">Jika foto/video terlihat pada formulir input tetapi tidak muncul di sini, pastikan desa dan nomor titik saat mengunggah sama dengan data yang dibuka. Dokumentasi akan dikirim otomatis ke server saat internet tersedia.</p>';
-  body.innerHTML=out;
+  body.innerHTML='<h3>Narasi Praktik Baik</h3><div class="pb-detail-narrative">'+safe(data.narasiPraktik||'Narasi belum dibuat.')+'</div>';
+  modal.style.display='block';
 }
 function tutupRecap(){document.getElementById('recapDetailModal').style.display='none'}
 
@@ -1178,20 +1058,6 @@ function tutupRecap(){document.getElementById('recapDetailModal').style.display=
 .pb-detail-narrative{white-space:pre-wrap;line-height:1.6;background:#f4f8f5;border:1px solid #dce9df;border-radius:9px;padding:12px}
 @media(max-width:600px){.pb-modal-card{padding:12px}.pb-detail-media{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
-
-
-<div id="pbVideoRecorderModal" style="display:none;position:fixed;inset:0;z-index:10060;background:#07130e;padding:12px;box-sizing:border-box">
-  <div style="max-width:720px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;color:white"><strong>Rekam Video Dokumentasi</strong><button type="button" onclick="pbCloseVideoRecorder()" style="padding:10px 14px">Tutup ✕</button></div>
-    <video id="pbVideoRecorderPreview" autoplay playsinline muted style="width:100%;flex:1;min-height:180px;max-height:65vh;object-fit:contain;background:#000;border-radius:12px"></video>
-    <div id="pbVideoRecorderStatus" style="color:white;text-align:center;font-size:14px">Kamera belum aktif.</div>
-    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-      <button id="pbVideoRecordStart" type="button" onclick="pbBeginVideoRecording()" style="background:#087443;color:white;border:0;border-radius:10px;padding:14px 20px;font-weight:bold">● MULAI REKAM</button>
-      <button id="pbVideoRecordStop" type="button" onclick="pbFinishVideoRecording()" disabled style="background:#b42318;color:white;border:0;border-radius:10px;padding:14px 20px;font-weight:bold;opacity:.5">■ SELESAI REKAM</button>
-      <button type="button" onclick="pbSwitchVideoRecorderCamera()" style="background:#fff;color:#123;border:0;border-radius:10px;padding:14px 18px">Ganti Kamera</button>
-    </div>
-  </div>
-</div>
 
 
 <div id="pbCameraModal" style="display:none;position:fixed;inset:0;z-index:10050;background:#07130e;padding:12px;box-sizing:border-box">
@@ -1271,67 +1137,6 @@ function pbStopLiveCamera(){
   if(video)video.srcObject=null;
   const modal=document.getElementById('pbCameraModal');
   if(modal)modal.style.display='none';
-}
-</script>
-
-
-<script>
-// Perekam video di dalam aplikasi; hasil rekaman langsung disimpan ke IndexedDB.
-let pbVideoStream=null,pbVideoRecorder=null,pbVideoChunks=[],pbVideoFacing='environment';
-async function pbStartVideoRecorder(){
-  const modal=document.getElementById('pbVideoRecorderModal'),status=document.getElementById('pbVideoRecorderStatus');
-  if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder){alert('Perekaman langsung tidak didukung browser ini. Gunakan Pilih Video dari Galeri.');return;}
-  const existing=await pbMediaLoad('video');if(existing.length>=2){alert('Dokumentasi video sudah mencapai batas 2 video untuk titik ini.');return;}
-  modal.style.display='block';status.textContent='Meminta izin kamera dan mikrofon…';
-  try{await pbOpenVideoRecorderStream();status.textContent='Kamera siap. Tekan MULAI REKAM.';}
-  catch(err){status.textContent='Kamera gagal dibuka: '+(err.message||err);alert('Tidak bisa membuka kamera/mikrofon: '+(err.message||err)+'. Pastikan izin kamera dan mikrofon diizinkan.');pbCloseVideoRecorder();}
-}
-async function pbOpenVideoRecorderStream(){
-  if(pbVideoStream)pbVideoStream.getTracks().forEach(t=>t.stop());
-  pbVideoStream=await navigator.mediaDevices.getUserMedia({audio:true,video:{facingMode:{ideal:pbVideoFacing},width:{ideal:1280},height:{ideal:720}}});
-  const preview=document.getElementById('pbVideoRecorderPreview');preview.srcObject=pbVideoStream;await preview.play();
-}
-async function pbSwitchVideoRecorderCamera(){try{pbVideoFacing=pbVideoFacing==='environment'?'user':'environment';await pbOpenVideoRecorderStream();document.getElementById('pbVideoRecorderStatus').textContent='Kamera siap.';}catch(e){alert('Tidak bisa mengganti kamera: '+e.message);}}
-function pbBeginVideoRecording(){
-  if(!pbVideoStream){alert('Kamera belum siap.');return;}
-  try{
-    const types=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'];
-    const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
-    pbVideoChunks=[];pbVideoRecorder=new MediaRecorder(pbVideoStream,mime?{mimeType:mime,videoBitsPerSecond:2500000}:undefined);
-    pbVideoRecorder.ondataavailable=e=>{if(e.data&&e.data.size)pbVideoChunks.push(e.data);};
-    pbVideoRecorder.onerror=e=>{document.getElementById('pbVideoRecorderStatus').textContent='Rekaman bermasalah: '+(e.error?.message||'kesalahan kamera');};
-    pbVideoRecorder.onstop=async()=>{
-      try{
-        const type=pbVideoRecorder.mimeType||pbVideoChunks[0]?.type||'video/webm';
-        const ext=type.includes('mp4')?'mp4':'webm';
-        const blob=new Blob(pbVideoChunks,{type});if(!blob.size)throw new Error('Hasil rekaman kosong.');
-        const file=new File([blob],`rekaman_${Date.now()}.${ext}`,{type,lastModified:Date.now()});
-        document.getElementById('pbVideoRecorderStatus').textContent='Menyimpan video ke aplikasi…';
-        await pbAddFiles('video',[file]);
-        document.getElementById('pbVideoRecorderStatus').textContent='Video berhasil disimpan.';
-        setTimeout(pbCloseVideoRecorder,700);
-      }catch(err){alert('Video gagal disimpan: '+err.message);document.getElementById('pbVideoRecorderStatus').textContent='Gagal menyimpan: '+err.message;}
-    };
-    pbVideoRecorder.start(1000);
-    document.getElementById('pbVideoRecordStart').disabled=true;document.getElementById('pbVideoRecordStart').style.opacity='.5';
-    document.getElementById('pbVideoRecordStop').disabled=false;document.getElementById('pbVideoRecordStop').style.opacity='1';
-    document.getElementById('pbVideoRecorderStatus').textContent='Sedang merekam… Tekan SELESAI REKAM jika sudah cukup.';
-  }catch(err){alert('Tidak dapat memulai rekaman: '+err.message);}
-}
-function pbFinishVideoRecording(){
-  if(pbVideoRecorder&&pbVideoRecorder.state==='recording'){
-    document.getElementById('pbVideoRecorderStatus').textContent='Mengolah hasil rekaman…';
-    document.getElementById('pbVideoRecordStop').disabled=true;pbVideoRecorder.stop();
-  }
-}
-function pbCloseVideoRecorder(){
-  if(pbVideoRecorder&&pbVideoRecorder.state==='recording')pbVideoRecorder.stop();
-  if(pbVideoStream){pbVideoStream.getTracks().forEach(t=>t.stop());pbVideoStream=null;}
-  const preview=document.getElementById('pbVideoRecorderPreview');if(preview)preview.srcObject=null;
-  const modal=document.getElementById('pbVideoRecorderModal');if(modal)modal.style.display='none';
-  const start=document.getElementById('pbVideoRecordStart'),stop=document.getElementById('pbVideoRecordStop');
-  if(start){start.disabled=false;start.style.opacity='1';}if(stop){stop.disabled=true;stop.style.opacity='.5';}
-  pbVideoRecorder=null;pbVideoChunks=[];
 }
 </script>
 
