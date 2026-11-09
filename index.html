@@ -319,14 +319,14 @@ a{overflow-wrap:anywhere}
 <div class="section">G. DOKUMENTASI VIDEO (1–2 VIDEO)</div>
 <div class="field full">
   <label>Dokumentasi video titik ini (maksimal 2 video)</label>
-  <input id="videoTitik" type="file" accept="video/*" multiple style="display:none">
+  <input id="videoTitik" type="file" accept="video/*,.mp4,.mov,.3gp,.webm,.m4v" multiple style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   <input id="videoKamera" type="file" accept="video/*" capture="environment" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
   <div class="actions">
-    <button type="button" class="primary" onclick="pbOpenCamera('videoKamera')">🎥 Rekam Video</button>
+    <button type="button" class="primary" onclick="pbStartVideoRecorder()">🎥 Rekam Video</button>
     <button type="button" class="light" onclick="document.getElementById('videoTitik').click()">＋ Pilih Video dari Galeri</button>
     <span id="videoCount" class="empty">0/2 video</span>
   </div>
-  <small class="empty">Setelah merekam, tekan centang/Gunakan Video/Selesai pada kamera agar file dikirim kembali ke aplikasi. Video lama tetap tersimpan.</small>
+  <small class="empty">Rekam langsung di aplikasi, tekan Selesai Rekam, lalu simpan. Video juga dapat dipilih dari galeri.</small>
   <div id="videoPreview" class="media-preview"></div>
 </div>
 <div class="section">H. STATUS PENYIMPANAN ONLINE</div>
@@ -1180,6 +1180,20 @@ function tutupRecap(){document.getElementById('recapDetailModal').style.display=
 </style>
 
 
+<div id="pbVideoRecorderModal" style="display:none;position:fixed;inset:0;z-index:10060;background:#07130e;padding:12px;box-sizing:border-box">
+  <div style="max-width:720px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;color:white"><strong>Rekam Video Dokumentasi</strong><button type="button" onclick="pbCloseVideoRecorder()" style="padding:10px 14px">Tutup ✕</button></div>
+    <video id="pbVideoRecorderPreview" autoplay playsinline muted style="width:100%;flex:1;min-height:180px;max-height:65vh;object-fit:contain;background:#000;border-radius:12px"></video>
+    <div id="pbVideoRecorderStatus" style="color:white;text-align:center;font-size:14px">Kamera belum aktif.</div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      <button id="pbVideoRecordStart" type="button" onclick="pbBeginVideoRecording()" style="background:#087443;color:white;border:0;border-radius:10px;padding:14px 20px;font-weight:bold">● MULAI REKAM</button>
+      <button id="pbVideoRecordStop" type="button" onclick="pbFinishVideoRecording()" disabled style="background:#b42318;color:white;border:0;border-radius:10px;padding:14px 20px;font-weight:bold;opacity:.5">■ SELESAI REKAM</button>
+      <button type="button" onclick="pbSwitchVideoRecorderCamera()" style="background:#fff;color:#123;border:0;border-radius:10px;padding:14px 18px">Ganti Kamera</button>
+    </div>
+  </div>
+</div>
+
+
 <div id="pbCameraModal" style="display:none;position:fixed;inset:0;z-index:10050;background:#07130e;padding:12px;box-sizing:border-box">
   <div style="max-width:720px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:10px">
     <div style="display:flex;justify-content:space-between;align-items:center;color:white">
@@ -1257,6 +1271,67 @@ function pbStopLiveCamera(){
   if(video)video.srcObject=null;
   const modal=document.getElementById('pbCameraModal');
   if(modal)modal.style.display='none';
+}
+</script>
+
+
+<script>
+// Perekam video di dalam aplikasi; hasil rekaman langsung disimpan ke IndexedDB.
+let pbVideoStream=null,pbVideoRecorder=null,pbVideoChunks=[],pbVideoFacing='environment';
+async function pbStartVideoRecorder(){
+  const modal=document.getElementById('pbVideoRecorderModal'),status=document.getElementById('pbVideoRecorderStatus');
+  if(!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder){alert('Perekaman langsung tidak didukung browser ini. Gunakan Pilih Video dari Galeri.');return;}
+  const existing=await pbMediaLoad('video');if(existing.length>=2){alert('Dokumentasi video sudah mencapai batas 2 video untuk titik ini.');return;}
+  modal.style.display='block';status.textContent='Meminta izin kamera dan mikrofon…';
+  try{await pbOpenVideoRecorderStream();status.textContent='Kamera siap. Tekan MULAI REKAM.';}
+  catch(err){status.textContent='Kamera gagal dibuka: '+(err.message||err);alert('Tidak bisa membuka kamera/mikrofon: '+(err.message||err)+'. Pastikan izin kamera dan mikrofon diizinkan.');pbCloseVideoRecorder();}
+}
+async function pbOpenVideoRecorderStream(){
+  if(pbVideoStream)pbVideoStream.getTracks().forEach(t=>t.stop());
+  pbVideoStream=await navigator.mediaDevices.getUserMedia({audio:true,video:{facingMode:{ideal:pbVideoFacing},width:{ideal:1280},height:{ideal:720}}});
+  const preview=document.getElementById('pbVideoRecorderPreview');preview.srcObject=pbVideoStream;await preview.play();
+}
+async function pbSwitchVideoRecorderCamera(){try{pbVideoFacing=pbVideoFacing==='environment'?'user':'environment';await pbOpenVideoRecorderStream();document.getElementById('pbVideoRecorderStatus').textContent='Kamera siap.';}catch(e){alert('Tidak bisa mengganti kamera: '+e.message);}}
+function pbBeginVideoRecording(){
+  if(!pbVideoStream){alert('Kamera belum siap.');return;}
+  try{
+    const types=['video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'];
+    const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'';
+    pbVideoChunks=[];pbVideoRecorder=new MediaRecorder(pbVideoStream,mime?{mimeType:mime,videoBitsPerSecond:2500000}:undefined);
+    pbVideoRecorder.ondataavailable=e=>{if(e.data&&e.data.size)pbVideoChunks.push(e.data);};
+    pbVideoRecorder.onerror=e=>{document.getElementById('pbVideoRecorderStatus').textContent='Rekaman bermasalah: '+(e.error?.message||'kesalahan kamera');};
+    pbVideoRecorder.onstop=async()=>{
+      try{
+        const type=pbVideoRecorder.mimeType||pbVideoChunks[0]?.type||'video/webm';
+        const ext=type.includes('mp4')?'mp4':'webm';
+        const blob=new Blob(pbVideoChunks,{type});if(!blob.size)throw new Error('Hasil rekaman kosong.');
+        const file=new File([blob],`rekaman_${Date.now()}.${ext}`,{type,lastModified:Date.now()});
+        document.getElementById('pbVideoRecorderStatus').textContent='Menyimpan video ke aplikasi…';
+        await pbAddFiles('video',[file]);
+        document.getElementById('pbVideoRecorderStatus').textContent='Video berhasil disimpan.';
+        setTimeout(pbCloseVideoRecorder,700);
+      }catch(err){alert('Video gagal disimpan: '+err.message);document.getElementById('pbVideoRecorderStatus').textContent='Gagal menyimpan: '+err.message;}
+    };
+    pbVideoRecorder.start(1000);
+    document.getElementById('pbVideoRecordStart').disabled=true;document.getElementById('pbVideoRecordStart').style.opacity='.5';
+    document.getElementById('pbVideoRecordStop').disabled=false;document.getElementById('pbVideoRecordStop').style.opacity='1';
+    document.getElementById('pbVideoRecorderStatus').textContent='Sedang merekam… Tekan SELESAI REKAM jika sudah cukup.';
+  }catch(err){alert('Tidak dapat memulai rekaman: '+err.message);}
+}
+function pbFinishVideoRecording(){
+  if(pbVideoRecorder&&pbVideoRecorder.state==='recording'){
+    document.getElementById('pbVideoRecorderStatus').textContent='Mengolah hasil rekaman…';
+    document.getElementById('pbVideoRecordStop').disabled=true;pbVideoRecorder.stop();
+  }
+}
+function pbCloseVideoRecorder(){
+  if(pbVideoRecorder&&pbVideoRecorder.state==='recording')pbVideoRecorder.stop();
+  if(pbVideoStream){pbVideoStream.getTracks().forEach(t=>t.stop());pbVideoStream=null;}
+  const preview=document.getElementById('pbVideoRecorderPreview');if(preview)preview.srcObject=null;
+  const modal=document.getElementById('pbVideoRecorderModal');if(modal)modal.style.display='none';
+  const start=document.getElementById('pbVideoRecordStart'),stop=document.getElementById('pbVideoRecordStop');
+  if(start){start.disabled=false;start.style.opacity='1';}if(stop){stop.disabled=true;stop.style.opacity='.5';}
+  pbVideoRecorder=null;pbVideoChunks=[];
 }
 </script>
 
