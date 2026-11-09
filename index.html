@@ -515,7 +515,28 @@ function pdfAll(){let a=entriesCurrent(),p=makeFor(a);if(p)p.save('Praktik_Baik_
 
 function pdfAllVillages(){let a=entriesAll(),p=makeFor(a);if(p)p.save('Praktik_Baik_8_Desa_'+a.length+'_Titik.pdf')}
 
-function erase(){if(confirm('Hapus seluruh data dari 8 desa? Data yang dihapus tidak dapat dikembalikan.')){store={villages:{A:{name:'Gadingsari',points:{}},B:{name:'Sumber Waru',points:{}},C:{name:'Kembangan',points:{}},D:{name:'Baratan',points:{}},E:{name:'Binakal',points:{}},F:{name:'Jeruksoksok',points:{}},G:{name:'Sumber Tengah',points:{}},H:{name:'Bendelan',points:{}}}};persist();form.reset();choose(1)}}
+async function erase(){
+  if(!confirm('HAPUS PERMANEN seluruh data 8 desa dari HP ini DAN Supabase/server, termasuk dokumentasi foto/video? Data tidak dapat dipulihkan.'))return;
+  const btn=document.querySelector('button[onclick="erase()"]');if(btn){btn.disabled=true;btn.textContent='Menghapus data…';}
+  try{
+    // Hapus salinan cloud dahulu agar tidak diunduh kembali saat aplikasi dibuka.
+    const sb=await pbSupabaseReady();
+    const {data:rows,error:readErr}=await sb.from(PB_SUPABASE_TABLE).select('kode_desa,titik,media');
+    if(readErr)throw new Error('Tidak bisa membaca data server: '+readErr.message);
+    const paths=[];
+    for(const row of (rows||[]))for(const m of (row.media||[]))if(m.path)paths.push(m.path);
+    for(let i=0;i<paths.length;i+=100){const {error}=await sb.storage.from(PB_SUPABASE_BUCKET).remove(paths.slice(i,i+100));if(error)throw new Error('Gagal menghapus foto/video server: '+error.message);}
+    const {error:delErr}=await sb.from(PB_SUPABASE_TABLE).delete().in('kode_desa',['A','B','C','D','E','F','G','H']);
+    if(delErr)throw new Error('Gagal menghapus data server: '+delErr.message);
+    // Hapus seluruh dokumentasi lokal IndexedDB.
+    const db=await pbDb();await new Promise((resolve,reject)=>{const tx=db.transaction(PB_MEDIA_STORE,'readwrite');tx.objectStore(PB_MEDIA_STORE).clear();tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});
+    store={villages:{A:{name:'Gadingsari',points:{}},B:{name:'Sumber Waru',points:{}},C:{name:'Kembangan',points:{}},D:{name:'Baratan',points:{}},E:{name:'Binakal',points:{}},F:{name:'Jeruksoksok',points:{}},G:{name:'Sumber Tengah',points:{}},H:{name:'Bendelan',points:{}}}};
+    persist();form.reset();await choose(1);await pbDrawMedia();
+    pbStatus('Semua data 8 desa dan dokumentasi berhasil dihapus dari perangkat dan server.');
+    alert('Berhasil. Data kegiatan dan foto/video telah dihapus dari HP ini dan Supabase.');
+  }catch(e){console.error('Hapus semua:',e);alert('Penghapusan belum tuntas: '+e.message+'\nData lokal tidak dikosongkan agar tidak kehilangan data tanpa kepastian. Periksa izin DELETE pada Supabase.');}
+  finally{if(btn){btn.disabled=false;btn.textContent='Hapus Semua Data';}}
+}
 
 
 function showMenu(menu){
