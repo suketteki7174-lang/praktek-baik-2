@@ -329,19 +329,12 @@ a{overflow-wrap:anywhere}
   <small class="empty">Tekan Tambah Video berkali-kali untuk menambahkan video satu per satu. Video lama tetap tersimpan.</small>
   <div id="videoPreview" class="media-preview"></div>
 </div>
-<div class="section">H. SINKRONISASI DATA ONLINE</div>
+<div class="section">H. STATUS PENYIMPANAN ONLINE</div>
 <div class="field full">
-  <label>Koneksi Supabase</label>
-  <div class="empty">Terhubung ke Supabase. Data tetap disimpan lokal saat offline, lalu dapat dikirim ke server saat internet tersedia.</div>
-  <div class="actions">
-    <button type="button" class="light" onclick="ujiKoneksiSupabase()">Uji Koneksi Server</button>
-    <button type="button" class="primary" onclick="sinkronkanTitikAktif()">☁️ Sinkronkan Titik Ini</button>
-    <button type="button" class="gold" onclick="sinkronkanSemua()">☁️ Sinkronkan Semua Data</button>
-  </div>
-  <div id="syncStatus" class="empty" role="status">Status: tersimpan lokal / belum disinkronkan.</div>
+  <div id="syncStatus" class="empty" role="status">Memeriksa koneksi server… Data tetap tersimpan di perangkat saat offline dan akan dikirim otomatis saat internet tersedia.</div>
 </div>
 
-<div class="actions"><button class="primary" type="submit">💾 Simpan Titik</button><button class="light" type="button" onclick="newEntry()">＋ Titik Baru</button><button class="gold" type="button" onclick="pdfOne()">PDF Titik Ini</button><button class="light" type="button" onclick="clearForm()">Kosongkan Form</button></div>
+<div class="actions"><button class="primary" type="submit">💾 Simpan Titik</button><button class="gold" type="button" onclick="pdfOne()">PDF Titik Ini</button></div>
 
 <div class="point-progress" id="pointProgress" aria-label="Status 10 titik tersimpan"></div>
 
@@ -472,7 +465,7 @@ function saveVillageName(){let name=$('#villageName').value.trim();if(!name){ale
 
 function newEntry(){let n=1;while(n<=10&&points()[n])n++;if(n>10){alert('Sepuluh titik untuk '+store.villages[village].name+' sudah terisi. Pilih titik untuk mengedit.');return}form.reset();choose(n)}
 
-form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.')});
+form.addEventListener('submit',e=>{e.preventDefault();if(!form.reportValidity())return;let data=read();data.desa=selectedVillageName();data.kecamatan='Binakal';data.kabupaten='Bondowoso';data.provinsi='Jawa Timur';data.pelaksana='TPK Desa '+selectedVillageName();store.villages[village].name=selectedVillageName();data._pbLocalUpdatedAt=new Date().toISOString();points()[cur]=data;persist();alert('Titik '+cur+' di '+store.villages[village].name+' berhasil disimpan.');setTimeout(()=>pbAutoSyncPoint(village,cur),250)});
 
 function clearForm(){if(confirm('Kosongkan form? Data tersimpan tidak dihapus.')){form.reset();fill(defaults());form.elements.desa.value=store.villages[village].name;form.elements.kecamatan.value='Binakal';form.elements.kabupaten.value='Bondowoso';form.elements.provinsi.value='Jawa Timur';form.elements.pelaksana.value='TPK Desa '+store.villages[village].name}}
 
@@ -667,6 +660,7 @@ async function pbAddFiles(type,fileList){
   const saved=await pbMediaLoad(type);
   pbStatus(`${saved.length} ${type} tersimpan di HP untuk ${store.villages[village].name}, titik ${cur}.`);
   if(saved.length<old.length+valid.length)throw new Error('File belum terbaca kembali setelah disimpan. Coba ulangi dan periksa ruang penyimpanan HP.');
+  if(points()?.[cur])setTimeout(()=>pbAutoSyncPoint(village,cur),250);
 }
 function pbOpenCamera(id){
   const input=document.getElementById(id);
@@ -749,6 +743,17 @@ async function pbSyncOne(key,n){
   d._pbCloudUpdatedAt=stamp;persist();
   return media.length;
 }
+const pbSyncJobs=new Map();
+async function pbAutoSyncPoint(key,n){
+  const jobKey=`${key}_${n}`;
+  if(!navigator.onLine){pbStatus('Offline: data tersimpan di HP dan menunggu internet untuk dikirim otomatis.');return}
+  if(pbSyncJobs.has(jobKey))return pbSyncJobs.get(jobKey);
+  const job=(async()=>{
+    try{pbStatus(`Mengirim otomatis ${store.villages[key]?.name||key}, titik ${n}…`);const count=await pbSyncOne(key,n);pbStatus(`Tersimpan di server: ${store.villages[key]?.name||key}, titik ${n} (${count} foto/video).`)}
+    catch(e){console.warn('Sinkronisasi otomatis gagal:',e);pbStatus('Belum terkirim ke server: '+e.message+'. Data lokal tetap aman; akan dicoba lagi saat internet tersedia.')}
+    finally{pbSyncJobs.delete(jobKey)}
+  })();pbSyncJobs.set(jobKey,job);return job;
+}
 async function sinkronkanTitikAktif(){
   try{pbStatus('Menghubungkan ke Supabase...');const count=await pbSyncOne(village,cur);pbStatus(`Titik ${cur} berhasil disinkronkan beserta ${count} file media.`);alert('Sinkronisasi titik berhasil ke Supabase.')}
   catch(e){pbStatus('Belum tersinkron: '+e.message);alert('Sinkronisasi belum berhasil: '+e.message+'\nData lokal tetap aman di perangkat.')}
@@ -827,7 +832,7 @@ async function pbStartRealtime(){
 }
 window.addEventListener('load',()=>setTimeout(pbStartRealtime,1500));
 
-window.addEventListener('online',()=>pbStatus('Internet tersedia. Data lokal aman; tekan Sinkronkan Semua Data untuk mengirim ke Supabase.'));
+window.addEventListener('online',()=>{pbStatus('Internet tersedia. Mengirim data lokal yang belum tersinkron secara otomatis…');for(const k of ['A','B','C','D','E','F','G','H'])for(const n of Object.keys(store.villages[k]?.points||{}))pbAutoSyncPoint(k,Number(n));});
 Promise.resolve().then(()=>pbDrawMedia().catch(e=>console.warn('Media lokal:',e)));
 
 
@@ -979,7 +984,7 @@ async function lihatRecap(key,n){
   }else out+='<p class="empty">Belum ada video yang tersimpan untuk titik ini.</p>';
   out+='</div>';
   if(cloudNote)out+='<p class="empty">Catatan: '+safe(cloudNote)+'</p>';
-  if(!fotos.length&&!videos.length)out+='<p class="empty">Jika foto/video terlihat pada formulir input tetapi tidak muncul di sini, pastikan desa dan nomor titik saat mengunggah sama dengan data yang dibuka. Setelah itu tekan “Sinkronkan Titik Ini” bila ingin dokumentasi tersedia melalui Supabase.</p>';
+  if(!fotos.length&&!videos.length)out+='<p class="empty">Jika foto/video terlihat pada formulir input tetapi tidak muncul di sini, pastikan desa dan nomor titik saat mengunggah sama dengan data yang dibuka. Dokumentasi akan dikirim otomatis ke server saat internet tersedia.</p>';
   body.innerHTML=out;
 }
 function tutupRecap(){document.getElementById('recapDetailModal').style.display='none'}
