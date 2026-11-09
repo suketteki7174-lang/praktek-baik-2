@@ -272,11 +272,11 @@ a{overflow-wrap:anywhere}
 
 <div class="field"><label>9. Tahun anggaran *</label><input name="tahun" type="number" min="2000" max="2100" required></div>
 
-<div class="field full"><label>10. Jumlah anggaran (Rp) *</label><input name="anggaran" type="number" min="0" required></div></div>
+<div class="field full"><label>10. Jumlah anggaran (Rp)</label><input name="anggaran" type="number" min="0"></div></div>
 
 <div class="section">B. VOLUME DAN WAKTU PELAKSANAAN</div><div class="grid">
 
-<div class="field full"><label>11. Volume pekerjaan *</label><input name="volume" required></div>
+<div class="field full"><label>11. Volume pekerjaan</label><input name="volume"></div>
 
 <div class="field"><label>12. Tanggal mulai</label><input name="mulai" type="date"></div><div class="field"><label>13. Tanggal selesai</label><input name="selesai" type="date"></div>
 
@@ -303,10 +303,7 @@ a{overflow-wrap:anywhere}
     <button type="button" class="light" onclick="buatNarasiOtomatis()">✨ Buat Narasi Otomatis</button>
   </div>
 </div>
-<div class="section">H. STATUS PENYIMPANAN ONLINE</div>
-<div class="field full">
-  <div id="syncStatus" class="empty" role="status">Memeriksa koneksi server… Data tetap tersimpan di perangkat saat offline dan akan dikirim otomatis saat internet tersedia.</div>
-</div>
+
 
 <div class="actions"><button class="primary" type="submit">💾 Simpan Titik</button><button class="gold" type="button" onclick="pdfOne()">PDF Titik Ini</button></div>
 
@@ -316,11 +313,11 @@ a{overflow-wrap:anywhere}
 
 </form>
 
-<div class="foot">* Wajib diisi. Nama kegiatan, volume, dan anggaran mengacu pada RAB. Jumlah pemanfaat dikonfirmasi kepada pemerintah desa.</div></main>
+<div class="foot">Kolom jumlah anggaran dan volume dapat dilengkapi kemudian melalui menu Edit. Jumlah pemanfaat dikonfirmasi kepada pemerintah desa.</div></main>
 
 <aside class="panel"><h2>Daftar 10 Titik</h2><div id="list" class="empty">Belum ada data tersimpan.</div><div class="actions">
 
-<button class="primary" style="width:100%" onclick="pdfAll()">📄 PDF Gabungan Desa Ini</button><button class="light" style="width:100%" onclick="pdfAllVillages()">📚 PDF Gabungan 8 Desa</button><button class="gold" style="width:100%" onclick="unduhPaketSemua()">⬇️ Unduh Data + Foto + Video (ZIP)</button><button class="danger" style="width:100%" onclick="erase()">Hapus Semua Data</button></div>
+<button class="primary" style="width:100%" onclick="pdfAll()">📄 PDF Gabungan Desa Ini</button><button class="light" style="width:100%" onclick="pdfAllVillages()">📚 PDF Gabungan 8 Desa</button><button class="danger" style="width:100%" onclick="erase()">Hapus Semua Data</button></div>
 
 <div class="foot">PDF gabungan berisi seluruh titik yang sudah disimpan. Simpan PDF ke perangkat untuk dokumentasi dan pelaporan.</div></aside></div></div>
 </div>
